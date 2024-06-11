@@ -10,8 +10,17 @@ load_dotenv()
 def fetch_delegators():
     hive = Hive()
     receiver_account = os.getenv("RECEIVER_ACCOUNT")
-    url = f"https://ecency.com/private-api/received-vesting/{receiver_account}"
+    account = Account(receiver_account, blockchain_instance=hive)
     
+    # Obtendo o HP total e o HP delegado
+    total_vests = float(account['vesting_shares'].amount)
+    delegated_vests = float(account['delegated_vesting_shares'].amount)
+    
+    # Calculando o HP próprio (Power Up) excluindo o HP delegado
+    own_vests = total_vests - delegated_vests
+    own_hp = hive.vests_to_hp(own_vests)
+
+    url = f"https://ecency.com/private-api/received-vesting/{receiver_account}"
     response = requests.get(url)
     data = response.json()
 
@@ -26,6 +35,9 @@ def fetch_delegators():
             "Conta": delegator,
             "HP Delegado": hp_delegado
         })
+
+    # Adicionando a própria conta no topo da lista
+    delegators.insert(0, {"Conta": receiver_account, "HP Delegado": own_hp})
 
     df = pd.DataFrame(delegators)
     df.to_csv("data/delegators.csv", index=False)
