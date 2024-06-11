@@ -5,7 +5,7 @@ from modules.account_info import get_account_info, vests_to_hp
 from modules.partners_info import get_partner_accounts
 from modules.save_to_csv import save_delegators_to_csv
 
-# Carregar variáveis de ambiente
+# Load environment variables
 load_dotenv()
 
 def main():
@@ -20,17 +20,17 @@ def main():
     for item in delegators_list:
         delegator = item['delegator']
         vesting_shares = float(item['vesting_shares'].replace(' VESTS', ''))
-        hp_delegado = vests_to_hp(vesting_shares)
+        delegated_hp = vests_to_hp(vesting_shares)
         if delegator in partner_accounts:
-            partner_hp += hp_delegado
+            partner_hp += delegated_hp
         else:
             delegators.append({
-                "Conta": delegator,
-                "HP Delegado": hp_delegado
+                "Account": delegator,
+                "Delegated HP": delegated_hp
             })
     
-    delegators.insert(0, {"Conta": receiver_account, "HP Delegado": own_hp})
-    delegators.insert(1, {"Conta": "Contas Parceiras", "HP Delegado": partner_hp})
+    delegators.insert(0, {"Account": receiver_account, "Delegated HP": own_hp})
+    delegators.insert(1, {"Account": "Partner Accounts", "Delegated HP": partner_hp})
 
     save_delegators_to_csv(delegators)
 
