@@ -10,6 +10,8 @@ load_dotenv()
 def fetch_delegators():
     hive = Hive()
     receiver_account = os.getenv("RECEIVER_ACCOUNT")
+    partner_accounts = os.getenv("PARTNER_ACCOUNTS").split(',')
+
     account = Account(receiver_account, blockchain_instance=hive)
     
     # Obtendo o HP total e o HP delegado
@@ -26,18 +28,24 @@ def fetch_delegators():
 
     delegators_list = data['list']
 
+    partner_hp = 0
     delegators = []
     for item in delegators_list:
         delegator = item['delegator']
         vesting_shares = float(item['vesting_shares'].replace(' VESTS', ''))
         hp_delegado = hive.vests_to_hp(vesting_shares)
-        delegators.append({
-            "Conta": delegator,
-            "HP Delegado": hp_delegado
-        })
+        if delegator in partner_accounts:
+            partner_hp += hp_delegado
+        else:
+            delegators.append({
+                "Conta": delegator,
+                "HP Delegado": hp_delegado
+            })
 
     # Adicionando a própria conta no topo da lista
     delegators.insert(0, {"Conta": receiver_account, "HP Delegado": own_hp})
+    # Adicionando a linha de contas parceiras
+    delegators.insert(1, {"Conta": "Contas Parceiras", "HP Delegado": partner_hp})
 
     df = pd.DataFrame(delegators)
     df.to_csv("data/delegators.csv", index=False)
