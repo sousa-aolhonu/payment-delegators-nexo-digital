@@ -1,7 +1,7 @@
 import pandas as pd
 from datetime import datetime
 
-def save_delegators_to_csv(delegators):
+def save_delegators_to_csv(delegators, earnings):
     # Get the current date and time
     now = datetime.now()
     # Format the date and time in the specified format
@@ -27,6 +27,15 @@ def save_delegators_to_csv(delegators):
     
     # Concatenate the original DataFrame with the total row
     df = pd.concat([df, total_row], ignore_index=True)
+    
+    # Add Earnings for the period row
+    earnings_row = pd.DataFrame([{
+        "Account": "Earnings for the period",
+        "Delegated HP": earnings,
+        "Percentage": ""
+    }])
+    
+    df = pd.concat([df, earnings_row], ignore_index=True)
     
     # Save the DataFrame as CSV
     df.to_csv(filename, index=False)
