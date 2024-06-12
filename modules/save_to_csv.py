@@ -11,9 +11,12 @@ def save_delegators_to_csv(delegators):
     # Create DataFrame
     df = pd.DataFrame(delegators)
     
+    # Round the values to 3 decimal places
+    df["Delegated HP"] = df["Delegated HP"].round(3)
+    
     # Calculate the percentage column
     total_hp = df["Delegated HP"].sum()
-    df["Percentage"] = df["Delegated HP"] / total_hp * 100
+    df["Percentage"] = (df["Delegated HP"] / total_hp * 100).round(3)
     
     # Create a DataFrame for the total row
     total_row = pd.DataFrame([{

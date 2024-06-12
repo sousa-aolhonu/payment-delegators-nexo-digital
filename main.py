@@ -19,7 +19,7 @@ def process_delegators(delegators_list, partner_accounts):
     for item in delegators_list:
         delegator = item['delegator']
         vesting_shares = float(item['vesting_shares'].replace(' VESTS', ''))
-        delegated_hp = vests_to_hp(vesting_shares)
+        delegated_hp = round(vests_to_hp(vesting_shares), 3)
         if delegator in partner_accounts:
             partner_hp += delegated_hp
         else:
@@ -27,11 +27,12 @@ def process_delegators(delegators_list, partner_accounts):
                 "Account": delegator,
                 "Delegated HP": delegated_hp
             })
+    partner_hp = round(partner_hp, 3)
     return delegators, partner_hp
 
 def main():
     receiver_account = os.getenv("RECEIVER_ACCOUNT")
-    own_hp = get_own_hp(receiver_account)
+    own_hp = round(get_own_hp(receiver_account), 3)
     
     delegators_list = fetch_delegators()
     partner_accounts = get_partner_accounts()
