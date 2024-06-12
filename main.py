@@ -8,13 +8,12 @@ from modules.save_to_csv import save_delegators_to_csv
 # Load environment variables
 load_dotenv()
 
-def main():
-    receiver_account = os.getenv("RECEIVER_ACCOUNT")
-    own_hp = get_account_info(receiver_account)
-    
-    delegators_list = fetch_delegators()
-    partner_accounts = get_partner_accounts()
-    
+def get_own_hp(receiver_account):
+    """Fetch the HP of the receiver account."""
+    return get_account_info(receiver_account)
+
+def process_delegators(delegators_list, partner_accounts):
+    """Process the list of delegators to separate partner accounts and calculate HP."""
     partner_hp = 0
     delegators = []
     for item in delegators_list:
@@ -28,6 +27,16 @@ def main():
                 "Account": delegator,
                 "Delegated HP": delegated_hp
             })
+    return delegators, partner_hp
+
+def main():
+    receiver_account = os.getenv("RECEIVER_ACCOUNT")
+    own_hp = get_own_hp(receiver_account)
+    
+    delegators_list = fetch_delegators()
+    partner_accounts = get_partner_accounts()
+    
+    delegators, partner_hp = process_delegators(delegators_list, partner_accounts)
     
     delegators.insert(0, {"Account": receiver_account, "Delegated HP": own_hp})
     delegators.insert(1, {"Account": "Partner Accounts", "Delegated HP": partner_hp})
