@@ -1,5 +1,9 @@
 import pandas as pd
 from datetime import datetime
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def save_delegators_to_csv(delegators, earnings):
     # Get the current date and time
@@ -18,11 +22,16 @@ def save_delegators_to_csv(delegators, earnings):
     total_hp = df["Delegated HP"].sum().round(3)
     df["Percentage"] = (df["Delegated HP"] / total_hp * 100).round(3)
     
+    # Calculate HIVE Deduction
+    hive_deduction_multiplier = float(os.getenv("HIVE_DEDUCTION_MULTIPLIER", 2))
+    df["HIVE Deduction"] = (df["Percentage"] * earnings * hive_deduction_multiplier / 100).round(3)
+    
     # Create a DataFrame for the total row
     total_row = pd.DataFrame([{
         "Account": "Total",
         "Delegated HP": total_hp,
-        "Percentage": 100.000
+        "Percentage": 100.000,
+        "HIVE Deduction": ""
     }])
     
     # Concatenate the original DataFrame with the total row
@@ -32,7 +41,8 @@ def save_delegators_to_csv(delegators, earnings):
     earnings_row = pd.DataFrame([{
         "Account": "Earnings for the period",
         "Delegated HP": round(earnings, 3),
-        "Percentage": ""
+        "Percentage": "",
+        "HIVE Deduction": ""
     }])
     
     df = pd.concat([df, earnings_row], ignore_index=True)
