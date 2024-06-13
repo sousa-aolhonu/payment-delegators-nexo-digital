@@ -5,12 +5,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def save_delegators_to_csv(delegators, earnings):
+def save_delegators_to_xlsx(delegators, earnings):
     # Get the current date and time
     now = datetime.now()
     # Format the date and time in the specified format
     timestamp = now.strftime("pd_%m-%d-%Y_%H-%M-%S")
-    filename = f"data/{timestamp}.csv"
+    filename = f"data/{timestamp}.xlsx"
     
     # Create DataFrame
     df = pd.DataFrame(delegators)
@@ -75,6 +75,6 @@ def save_delegators_to_csv(delegators, earnings):
     
     df = pd.concat([df, earnings_row, apr_row], ignore_index=True)
     
-    # Save the DataFrame as CSV
-    df.to_csv(filename, index=False)
+    # Save the DataFrame as XLSX
+    df.to_excel(filename, index=False)
     print(f"Delegators list successfully saved in '{filename}'.")

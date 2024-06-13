@@ -4,7 +4,7 @@ from modules.fetch_delegators import fetch_delegators
 from modules.account_info import get_account_info, vests_to_hp
 from modules.partners_info import get_partner_accounts
 from modules.utils import get_latest_file, get_previous_own_hp
-from modules.save_to_csv import save_delegators_to_csv
+from modules.save_to_xlsx import save_delegators_to_xlsx  # Ensure correct import
 
 # Load environment variables
 load_dotenv()
@@ -48,7 +48,7 @@ def main():
     delegators.insert(0, {"Account": receiver_account, "Delegated HP": own_hp})
     delegators.insert(1, {"Account": "Partner Accounts", "Delegated HP": partner_hp})
 
-    save_delegators_to_csv(delegators, earnings)
+    save_delegators_to_xlsx(delegators, earnings)
 
 if __name__ == "__main__":
     main()
