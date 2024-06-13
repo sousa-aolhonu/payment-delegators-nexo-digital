@@ -26,12 +26,18 @@ def save_delegators_to_csv(delegators, earnings):
     hive_deduction_multiplier = float(os.getenv("HIVE_DEDUCTION_MULTIPLIER", 2))
     df["HIVE Deduction"] = (df["Percentage"] * earnings * hive_deduction_multiplier / 100).round(3)
     
+    # Calculate NEXO Payment
+    token_name = os.getenv("TOKEN_NAME", "NEXO")
+    token_fixed_price = float(os.getenv("TOKEN_FIXED_PRICE", 0.1))
+    df[f"{token_name} Payment"] = ((df["HIVE Deduction"] * token_fixed_price) * 100).round(3)
+    
     # Create a DataFrame for the total row
     total_row = pd.DataFrame([{
         "Account": "Total",
         "Delegated HP": total_hp,
         "Percentage": 100.000,
-        "HIVE Deduction": ""
+        "HIVE Deduction": "",
+        f"{token_name} Payment": ""
     }])
     
     # Concatenate the original DataFrame with the total row
@@ -42,7 +48,8 @@ def save_delegators_to_csv(delegators, earnings):
         "Account": "Earnings for the period",
         "Delegated HP": round(earnings, 3),
         "Percentage": "",
-        "HIVE Deduction": ""
+        "HIVE Deduction": "",
+        f"{token_name} Payment": ""
     }])
     
     df = pd.concat([df, earnings_row], ignore_index=True)
