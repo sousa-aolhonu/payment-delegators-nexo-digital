@@ -15,14 +15,14 @@ def save_delegators_to_csv(delegators, earnings):
     df["Delegated HP"] = df["Delegated HP"].round(3)
     
     # Calculate the percentage column
-    total_hp = df["Delegated HP"].sum()
+    total_hp = df["Delegated HP"].sum().round(3)
     df["Percentage"] = (df["Delegated HP"] / total_hp * 100).round(3)
     
     # Create a DataFrame for the total row
     total_row = pd.DataFrame([{
         "Account": "Total",
         "Delegated HP": total_hp,
-        "Percentage": 100
+        "Percentage": 100.000
     }])
     
     # Concatenate the original DataFrame with the total row
@@ -31,7 +31,7 @@ def save_delegators_to_csv(delegators, earnings):
     # Add Earnings for the period row
     earnings_row = pd.DataFrame([{
         "Account": "Earnings for the period",
-        "Delegated HP": earnings,
+        "Delegated HP": round(earnings, 3),
         "Percentage": ""
     }])
     

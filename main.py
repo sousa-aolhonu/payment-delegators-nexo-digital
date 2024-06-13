@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 from modules.fetch_delegators import fetch_delegators
 from modules.account_info import get_account_info, vests_to_hp
 from modules.partners_info import get_partner_accounts
-from modules.save_to_csv import save_delegators_to_csv
 from modules.utils import get_latest_file, get_previous_own_hp
+from modules.save_to_csv import save_delegators_to_csv
 
 # Load environment variables
 load_dotenv()
