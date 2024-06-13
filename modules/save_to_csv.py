@@ -35,6 +35,14 @@ def save_delegators_to_csv(delegators, earnings):
     total_hive_deduction = df["HIVE Deduction"].sum().round(3)
     total_token_payment = df[f"{token_name} Payment"].sum().round(3)
     
+    # Get the current year and calculate the number of days in the year
+    current_year = now.year
+    is_leap_year = (current_year % 4 == 0 and current_year % 100 != 0) or (current_year % 400 == 0)
+    days_in_year = 366 if is_leap_year else 365
+    
+    # Calculate APR
+    apr = (((total_hive_deduction * days_in_year) / total_hp) * 100).round(3)
+    
     # Create a DataFrame for the total row
     total_row = pd.DataFrame([{
         "Account": "Total",
@@ -56,7 +64,16 @@ def save_delegators_to_csv(delegators, earnings):
         f"{token_name} Payment": ""
     }])
     
-    df = pd.concat([df, earnings_row], ignore_index=True)
+    # Add APR row
+    apr_row = pd.DataFrame([{
+        "Account": "APR",
+        "Delegated HP": apr,
+        "Percentage": "",
+        "HIVE Deduction": "",
+        f"{token_name} Payment": ""
+    }])
+    
+    df = pd.concat([df, earnings_row, apr_row], ignore_index=True)
     
     # Save the DataFrame as CSV
     df.to_csv(filename, index=False)
