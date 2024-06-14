@@ -1,6 +1,10 @@
 import pandas as pd
 import os
 from dotenv import load_dotenv
+from colorama import Fore, Style, init
+
+# Initialize colorama
+init(autoreset=True)
 
 load_dotenv()
 
@@ -19,8 +23,8 @@ def calculate_additional_columns(delegators, earnings):
         token_fixed_price = float(os.getenv("TOKEN_FIXED_PRICE", 0.1))
         df[f"{token_name} Payment"] = ((df["HIVE Deduction"] * token_fixed_price) * 100).round(3)
 
-        print("[Success] Calculated additional columns.")
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Calculated additional columns.")
         return df
     except Exception as e:
-        print(f"[Error] Error calculating additional columns: {e}")
+        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error calculating additional columns: {e}")
         return pd.DataFrame()

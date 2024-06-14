@@ -2,6 +2,10 @@ import pandas as pd
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+from colorama import Fore, Style, init
+
+# Initialize colorama
+init(autoreset=True)
 
 load_dotenv()
 
@@ -51,6 +55,6 @@ def save_delegators_to_xlsx(df, earnings):
         df = pd.concat([df, earnings_row, apr_row], ignore_index=True)
 
         df.to_excel(filename, index=False)
-        print(f"[Success] Delegators list successfully saved in '{filename}'.")
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators list successfully saved in '{Fore.YELLOW}{filename}{Style.RESET_ALL}'.")
     except Exception as e:
-        print(f"[Error] Error saving delegators to XLSX: {e}")
+        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error saving delegators to XLSX: {e}")
