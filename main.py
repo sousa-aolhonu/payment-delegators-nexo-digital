@@ -38,6 +38,15 @@ def process_delegators(delegators_list, partner_accounts):
     partner_hp = round(partner_hp, 3)
     return delegators, partner_hp
 
+def insert_accounts_into_df(delegators, receiver_account, partner_hp, ignore_payment_accounts):
+    delegators.insert(0, {"Account": receiver_account, "Delegated HP": receiver_account})
+    delegators.insert(1, {"Account": "Partner Accounts", "Delegated HP": partner_hp})
+
+    for account in ignore_payment_accounts:
+        delegators.append({"Account": account, "Delegated HP": 0})
+
+    return delegators
+
 def main():
     try:
         receiver_account = os.getenv("RECEIVER_ACCOUNT")
@@ -57,11 +66,7 @@ def main():
 
         delegators, partner_hp = process_delegators(delegators_list, partner_accounts)
 
-        delegators.insert(0, {"Account": receiver_account, "Delegated HP": own_hp})
-        delegators.insert(1, {"Account": "Partner Accounts", "Delegated HP": partner_hp})
-
-        for account in ignore_payment_accounts:
-            delegators.append({"Account": account, "Delegated HP": 0})
+        delegators = insert_accounts_into_df(delegators, receiver_account, partner_hp, ignore_payment_accounts)
 
         print(f"[Info] Calculating additional columns...")
         df = calculate_additional_columns(delegators, earnings)
