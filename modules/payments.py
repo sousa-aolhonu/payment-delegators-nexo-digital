@@ -67,6 +67,7 @@ def process_payments(df):
         token_name = os.getenv('TOKEN_NAME', 'NEXO')
         receiver_account = os.getenv('RECEIVER_ACCOUNT')
         partner_accounts = os.getenv('PARTNER_ACCOUNTS', '').split(',')
+        ignore_payment_accounts = os.getenv('IGNORE_PAYMENT_ACCOUNTS', '').split(',')
 
         for index, row in df.iterrows():
             try:
@@ -74,7 +75,7 @@ def process_payments(df):
                 payment_column_name = f"{token_name} Payment"
                 payment_amount = float(row.get(payment_column_name, 0))
 
-                if delegator not in [receiver_account, "Partner Accounts", "Total", "Earnings for the period", "APR"] + partner_accounts and payment_amount > 0:
+                if delegator not in [receiver_account, "Partner Accounts", "Total", "Earnings for the period", "APR"] + partner_accounts + ignore_payment_accounts and payment_amount > 0:
                     if payment_amount <= nexo_balance:
                         wallet.transfer(delegator, str(f"{payment_amount:.3f}"), token_name, "Delegation payment")
                         nexo_balance -= payment_amount

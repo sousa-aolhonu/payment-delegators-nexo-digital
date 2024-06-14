@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import pandas as pd
 from modules.fetch_delegators import fetch_delegators
 from modules.account_info import get_account_info, vests_to_hp
-from modules.partners_info import get_partner_accounts
+from modules.partners_info import get_partner_accounts, get_ignore_payment_accounts
 from modules.utils import get_latest_file, get_previous_own_hp
 from modules.save_to_xlsx import save_delegators_to_xlsx
 from modules.payments import process_payments
@@ -53,11 +53,15 @@ def main():
         print(f"[Info] Fetching delegators list...")
         delegators_list = fetch_delegators()
         partner_accounts = get_partner_accounts()
+        ignore_payment_accounts = get_ignore_payment_accounts()
 
         delegators, partner_hp = process_delegators(delegators_list, partner_accounts)
 
         delegators.insert(0, {"Account": receiver_account, "Delegated HP": own_hp})
         delegators.insert(1, {"Account": "Partner Accounts", "Delegated HP": partner_hp})
+
+        for account in ignore_payment_accounts:
+            delegators.append({"Account": account, "Delegated HP": 0})
 
         print(f"[Info] Calculating additional columns...")
         df = calculate_additional_columns(delegators, earnings)
