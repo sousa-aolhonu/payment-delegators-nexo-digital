@@ -2,17 +2,26 @@ import os
 import pandas as pd
 
 def get_latest_file(directory, prefix):
-    """Get the latest file from the specified directory with the given prefix."""
-    files = [f for f in os.listdir(directory) if f.startswith(prefix)]
-    if not files:
+    try:
+        files = [f for f in os.listdir(directory) if f.startswith(prefix)]
+        if not files:
+            print("[Info] No files found.")
+            return None
+        files.sort(reverse=True)
+        latest_file = os.path.join(directory, files[0])
+        print(f"[Success] Latest file found: {latest_file}")
+        return latest_file
+    except Exception as e:
+        print(f"[Error] Error getting latest file: {e}")
         return None
-    files.sort(reverse=True)
-    return os.path.join(directory, files[0])
 
 def get_previous_own_hp(latest_file, receiver_account):
-    """Extract the own HP of the receiver account from the latest file."""
-    if latest_file:
-        df = pd.read_excel(latest_file)  # Change from read_csv to read_excel
-        previous_own_hp = df.loc[df['Account'] == receiver_account, 'Delegated HP'].values[0]
-        return previous_own_hp
+    try:
+        if latest_file:
+            df = pd.read_excel(latest_file)
+            previous_own_hp = df.loc[df['Account'] == receiver_account, 'Delegated HP'].values[0]
+            print("[Success] Previous own HP retrieved.")
+            return previous_own_hp
+    except Exception as e:
+        print(f"[Error] Error getting previous own HP: {e}")
     return 0

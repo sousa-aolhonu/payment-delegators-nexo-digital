@@ -1,0 +1,6 @@
+beem
+requests
+python-dotenv
+pandas
+hiveengine
+pycryptodome
