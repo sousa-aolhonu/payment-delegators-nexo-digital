@@ -43,8 +43,10 @@ def check_balance(wallet):
     try:
         balances = wallet.get_balances()
         nexo_balance = next((item["balance"] for item in balances if item["symbol"] == "NEXO"), 0.0)
+        nexo_balance = float(nexo_balance)  # Garantir que seja float antes de arredondar
+        nexo_balance = round(nexo_balance, 3)
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} NEXO balance retrieved: {Fore.YELLOW}{nexo_balance}{Style.RESET_ALL}")
-        return float(nexo_balance)
+        return nexo_balance
     except Exception as e:
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error checking NEXO balance: {e}")
         return 0.0
@@ -73,22 +75,30 @@ def process_payments(df):
         partner_accounts = os.getenv('PARTNER_ACCOUNTS', '').split(',')
         ignore_payment_accounts = os.getenv('IGNORE_PAYMENT_ACCOUNTS', '').split(',')
 
+        payments_made = False
+
         for index, row in df.iterrows():
             try:
                 delegator = row["Account"]
                 payment_column_name = f"{token_name} Payment"
                 payment_amount = float(row.get(payment_column_name, 0))
 
-                if delegator not in [receiver_account, "Partner Accounts", "Total", "Earnings for the period", "APR"] + partner_accounts + ignore_payment_accounts and payment_amount > 0:
-                    if payment_amount <= nexo_balance:
-                        wallet.transfer(delegator, str(f"{payment_amount:.3f}"), token_name, "Delegation payment")
-                        nexo_balance -= payment_amount
-                        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Payment of {Fore.YELLOW}{payment_amount}{Style.RESET_ALL} {Fore.YELLOW}{token_name}{Style.RESET_ALL} to {Fore.BLUE}{delegator}{Style.RESET_ALL} completed successfully.")
-                    else:
-                        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Insufficient balance to pay {Fore.YELLOW}{payment_amount}{Style.RESET_ALL} {Fore.YELLOW}{token_name}{Style.RESET_ALL} to {Fore.BLUE}{delegator}{Style.RESET_ALL}.")
+                if delegator not in [receiver_account, "Partner Accounts", "Total", "Earnings for the period", "APR"] + partner_accounts and payment_amount > 0:
+                    if delegator not in ignore_payment_accounts:
+                        if payment_amount <= nexo_balance:
+                            wallet.transfer(delegator, str(f"{payment_amount:.3f}"), token_name, "Delegation payment")
+                            nexo_balance -= payment_amount
+                            payments_made = True
+                            print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Payment of {Fore.YELLOW}{payment_amount}{Style.RESET_ALL} {Fore.YELLOW}{token_name}{Style.RESET_ALL} to {Fore.BLUE}{delegator}{Style.RESET_ALL} completed successfully.")
+                        else:
+                            print(f"{Fore.RED}[Error]{Style.RESET_ALL} Insufficient balance to pay {Fore.YELLOW}{payment_amount}{Style.RESET_ALL} {Fore.YELLOW}{token_name}{Style.RESET_ALL} to {Fore.BLUE}{delegator}{Style.RESET_ALL}.")
             except Exception as e:
                 print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error making payment to {Fore.BLUE}{delegator}{Style.RESET_ALL}: {e}")
 
+        if not payments_made:
+            print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} No payments were made because there were no eligible delegators or sufficient balances.")
+        
+        nexo_balance = round(nexo_balance, 3)
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Updated {Fore.YELLOW}{token_name}{Style.RESET_ALL} balance after payments: {Fore.YELLOW}{nexo_balance}{Style.RESET_ALL}")
     except Exception as e:
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error in payment process: {e}")
