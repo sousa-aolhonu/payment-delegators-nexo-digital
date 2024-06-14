@@ -25,7 +25,7 @@ def process_delegators(delegators_list, partner_accounts):
         try:
             delegator = item['delegator']
             vesting_shares = float(item['vesting_shares'].replace(' VESTS', ''))
-            delegated_hp = round(vests_to_hp(vesting_shares), 3)
+            delegated_hp = round(vests_to_hp(vesting_shares, delegator), 3)
             if delegator in partner_accounts:
                 partner_hp += delegated_hp
             else:

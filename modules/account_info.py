@@ -15,12 +15,12 @@ def get_account_info(account_name):
         print(f"[Error] Error getting account info for {account_name}: {e}")
         return 0
 
-def vests_to_hp(vesting_shares):
+def vests_to_hp(vesting_shares, delegator):
     try:
         hive = Hive()
         hp = hive.vests_to_hp(vesting_shares)
-        print(f"[Success] Converted vests to HP.")
+        print(f"[Success] Converted vests to HP for {delegator}.")
         return hp
     except Exception as e:
-        print(f"[Error] Error converting vests to HP: {e}")
+        print(f"[Error] Error converting vests to HP for {delegator}: {e}")
         return 0
