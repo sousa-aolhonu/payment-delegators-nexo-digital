@@ -11,10 +11,12 @@ load_dotenv()
 
 def get_delegators(receiver_account):
     try:
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching delegators for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
         url = f"https://ecency.com/private-api/received-vesting/{receiver_account}"
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators fetched successfully.")
         return data['list']
     except requests.exceptions.RequestException as e:
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching delegators: {e}")
@@ -30,7 +32,7 @@ def fetch_delegators():
             raise ValueError(f"{Fore.RED}[Error]{Style.RESET_ALL} RECEIVER_ACCOUNT is not set in the environment variables.")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching delegators for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
         delegators = get_delegators(receiver_account)
-        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Fetched delegators successfully.")
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators fetched successfully.")
         return delegators
     except Exception as e:
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error in fetch_delegators: {e}")

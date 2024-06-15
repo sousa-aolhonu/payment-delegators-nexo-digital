@@ -11,6 +11,7 @@ load_dotenv()
 
 def save_delegators_to_xlsx(df, earnings):
     try:
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Preparing to save delegators list to XLSX...")
         now = datetime.now()
         timestamp = now.strftime("pd_%m-%d-%Y_%H-%M-%S")
         filename = f"data/{timestamp}.xlsx"
@@ -57,18 +58,21 @@ def save_delegators_to_xlsx(df, earnings):
 
         df = pd.concat([df, earnings_row, apr_row], ignore_index=True)
 
-        # Save to XLSX with hyperlinks
+        # Add hyperlinks to the TxID column
+        for i in range(len(df)):
+            txid = df.at[i, "TxID"]
+            if txid and txid not in ["Not found", "Failed", "Error", ""]:
+                df.at[i, "TxID"] = f'=HYPERLINK("https://he.dtools.dev/tx/{txid}", "{txid}")'
+
         with pd.ExcelWriter(filename, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name='Delegators')
-            workbook = writer.book
+            workbook  = writer.book
             worksheet = writer.sheets['Delegators']
-            
-            # Add hyperlinks to TxID column
-            for row_num, value in enumerate(df['TxID'], start=1):
-                if value and value != "":
-                    url = f"https://he.dtools.dev/tx/{value}"
-                    worksheet.write_url(f'F{row_num+1}', url, string=value)
-        
+
+            for i, txid in enumerate(df["TxID"]):
+                if txid.startswith('=HYPERLINK'):
+                    worksheet.write_formula(i + 1, df.columns.get_loc("TxID"), txid)
+
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators list successfully saved in '{Fore.YELLOW}{filename}{Style.RESET_ALL}'.")
     except Exception as e:
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error saving delegators to XLSX: {e}")

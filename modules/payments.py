@@ -25,6 +25,7 @@ hashlib.new = new_hash
 
 def configure_hive():
     try:
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Configuring Hive...")
         stm = Hive(node="https://api.hive.blog", keys=[os.getenv("HIVE_ENGINE_ACTIVE_PRIVATE_KEY"), os.getenv("HIVE_ENGINE_POSTING_PRIVATE_KEY")])
         account = Account(os.getenv("PAYMENT_ACCOUNT"), blockchain_instance=stm)
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Hive configured successfully.")
@@ -35,6 +36,7 @@ def configure_hive():
 
 def configure_hive_engine_wallet(account, stm):
     try:
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Configuring Hive Engine Wallet...")
         wallet = HiveEngineWallet(account.name, steem_instance=stm)
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Hive Engine Wallet configured successfully.")
         return wallet
@@ -46,18 +48,17 @@ def process_payments(df):
     try:
         payments_enabled = os.getenv("ACTIVATE_PAYMENTS", "False") == "True"
         if not payments_enabled:
-            print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Payments are deactivated. Only spreadsheets were generated.")
+            print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Payments are deactivated. Only spreadsheets will be generated.")
             return
 
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Configuring Hive and Wallet...")
         stm, payment_account = configure_hive()
         if not stm or not payment_account:
-            print(f"{Fore.RED}[Error]{Style.RESET_ALL} Failed to configure Hive.")
-            return
+            raise Exception("Failed to configure Hive")
 
         wallet = configure_hive_engine_wallet(payment_account, stm)
         if not wallet:
-            print(f"{Fore.RED}[Error]{Style.RESET_ALL} Failed to configure Hive Engine Wallet.")
-            return
+            raise Exception("Failed to configure Hive Engine Wallet")
 
         token_name = os.getenv('TOKEN_NAME', 'NEXO')
         receiver_account = os.getenv('RECEIVER_ACCOUNT')
@@ -75,8 +76,10 @@ def process_payments(df):
 
                 if delegator not in [receiver_account, "Partner Accounts", "Total", "Earnings for the period", "APR"] + partner_accounts and payment_amount > 0:
                     if delegator not in ignore_payment_accounts:
+                        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Processing payment for {Fore.BLUE}{delegator}{Style.RESET_ALL}...")
                         if process_payment_for_delegator(wallet, payment_account, token_name, delegator, payment_amount, df, index):
                             payments_made = True
+                        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Payment processed for {Fore.BLUE}{delegator}{Style.RESET_ALL}.")
             except Exception as e:
                 print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error making payment to {Fore.BLUE}{delegator}{Style.RESET_ALL}: {e}")
 
@@ -84,6 +87,6 @@ def process_payments(df):
             print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} No payments were made because there were no eligible delegators or sufficient balances.")
         
         final_balance = check_balance(wallet)
-        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Updated {Fore.YELLOW}{token_name}{Style.RESET_ALL} balance after payments: {Fore.YELLOW}{final_balance}{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Updated {Fore.YELLOW}{token_name}{Style.RESET_ALL} balance after payments: {Fore.YELLOW}{final_balance}")
     except Exception as e:
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error in payment process: {e}")

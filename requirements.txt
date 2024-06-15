@@ -6,3 +6,4 @@ xlsxwriter
 hiveengine
 pycryptodome
 colorama
+tabulate

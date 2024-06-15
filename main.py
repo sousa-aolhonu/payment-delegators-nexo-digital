@@ -9,6 +9,7 @@ from modules.utils import get_latest_file, get_previous_own_hp
 from modules.save_to_xlsx import save_delegators_to_xlsx
 from modules.payments import process_payments
 from modules.calculations import calculate_additional_columns
+from tabulate import tabulate
 
 # Initialize colorama
 init(autoreset=True)
@@ -23,60 +24,95 @@ def check_env_variables():
     ]
     for var in required_vars:
         if not os.getenv(var):
+            print(f"{Fore.RED}[Error]{Style.RESET_ALL} Environment variable {Fore.BLUE}{var}{Style.RESET_ALL} is not set")
             raise EnvironmentError(f"Environment variable {var} is not set")
+        else:
+            print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Environment variable {Fore.BLUE}{var}{Style.RESET_ALL} is set: {Fore.YELLOW}{os.getenv(var)}")
 
 def get_own_hp(receiver_account):
     try:
-        return get_account_info(receiver_account)
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching own HP for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
+        own_hp = get_account_info(receiver_account)
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Own HP for {Fore.BLUE}{receiver_account}{Style.RESET_ALL} is {Fore.YELLOW}{own_hp}")
+        return own_hp
     except Exception as e:
-        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching own HP: {e}")
-        return 0
+        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching own HP for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}: {e}")
+        raise
 
 def fetch_delegators_info(receiver_account):
-    print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching delegators list...")
-    delegators_list = fetch_delegators()
-    partner_accounts = get_partner_accounts()
-    ignore_payment_accounts = get_ignore_payment_accounts()
-    return delegators_list, partner_accounts, ignore_payment_accounts
+    try:
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching delegators list for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
+        delegators_list = fetch_delegators()
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators list fetched successfully.")
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching partner accounts...")
+        partner_accounts = get_partner_accounts()
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Partner accounts fetched successfully.")
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching ignore payment accounts...")
+        ignore_payment_accounts = get_ignore_payment_accounts()
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Ignore payment accounts fetched successfully.")
+        return delegators_list, partner_accounts, ignore_payment_accounts
+    except Exception as e:
+        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching delegators info: {e}")
+        raise
 
 def calculate_earnings(own_hp, receiver_account):
-    print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching latest file...")
-    latest_file = get_latest_file('data', 'pd_')
-    previous_own_hp = round(get_previous_own_hp(latest_file, receiver_account), 3)
-    earnings = round(own_hp - previous_own_hp, 3)
-    return earnings
+    try:
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching latest file for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
+        latest_file = get_latest_file('data', 'pd_')
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Latest file found: {Fore.YELLOW}{latest_file}")
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching previous own HP from latest file...")
+        previous_own_hp = round(get_previous_own_hp(latest_file, receiver_account), 3)
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Previous own HP: {Fore.YELLOW}{previous_own_hp}")
+        earnings = round(own_hp - previous_own_hp, 3)
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Earnings calculated: {Fore.YELLOW}{earnings}")
+        return earnings
+    except Exception as e:
+        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error calculating earnings: {e}")
+        raise
 
 def process_delegators(delegators_list, partner_accounts):
-    partner_hp = 0
-    delegators = []
-    for item in delegators_list:
-        try:
-            delegator = item['delegator']
-            vesting_shares = float(item['vesting_shares'].replace(' VESTS', ''))
-            delegated_hp = round(vests_to_hp(vesting_shares, delegator), 3)
-            if delegator in partner_accounts:
-                partner_hp += delegated_hp
-            else:
-                delegators.append({
-                    "Account": delegator,
-                    "Delegated HP": delegated_hp
-                })
-        except Exception as e:
-            print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error processing delegator {Fore.BLUE}{item}{Style.RESET_ALL}: {e}")
-    partner_hp = round(partner_hp, 3)
-    return delegators, partner_hp
+    try:
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Processing delegators list...")
+        partner_hp = 0
+        delegators = []
+        for item in delegators_list:
+            try:
+                delegator = item['delegator']
+                vesting_shares = float(item['vesting_shares'].replace(' VESTS', ''))
+                delegated_hp = round(vests_to_hp(vesting_shares, delegator), 3)
+                if delegator in partner_accounts:
+                    partner_hp += delegated_hp
+                else:
+                    delegators.append({
+                        "Account": delegator,
+                        "Delegated HP": delegated_hp
+                    })
+                print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Processed delegator {Fore.BLUE}{delegator}{Style.RESET_ALL}: {Fore.YELLOW}{delegated_hp} HP")
+            except Exception as e:
+                print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error processing delegator {Fore.BLUE}{item}{Style.RESET_ALL}: {e}")
+        partner_hp = round(partner_hp, 3)
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators processed successfully. Partner HP: {Fore.YELLOW}{partner_hp}")
+        return delegators, partner_hp
+    except Exception as e:
+        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error processing delegators: {e}")
+        raise
 
 def insert_accounts_into_df(delegators, receiver_account, receiver_hp, partner_hp):
-    delegators.insert(0, {"Account": receiver_account, "Delegated HP": receiver_hp})
-    delegators.insert(1, {"Account": "Partner Accounts", "Delegated HP": partner_hp})
-    return delegators
+    try:
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Inserting accounts into DataFrame...")
+        delegators.insert(0, {"Account": receiver_account, "Delegated HP": receiver_hp})
+        delegators.insert(1, {"Account": "Partner Accounts", "Delegated HP": partner_hp})
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Accounts inserted into DataFrame successfully.")
+        return delegators
+    except Exception as e:
+        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error inserting accounts into DataFrame: {e}")
+        raise
 
 def main():
     try:
         check_env_variables()
 
         receiver_account = os.getenv("RECEIVER_ACCOUNT")
-        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching own HP for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
         own_hp = round(get_own_hp(receiver_account), 3)
 
         earnings = calculate_earnings(own_hp, receiver_account)
@@ -89,6 +125,10 @@ def main():
 
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Calculating additional columns...")
         df = calculate_additional_columns(delegators, earnings)
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Additional columns calculated successfully.")
+
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} DataFrame before payments:")
+        print(tabulate(df, headers='keys', tablefmt='psql'))
 
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Processing payments...")
         process_payments(df)
@@ -96,6 +136,7 @@ def main():
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Saving delegators list to XLSX...")
         save_delegators_to_xlsx(df, earnings)
 
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} All tasks completed successfully.")
     except Exception as e:
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error in main execution: {e}")
 
