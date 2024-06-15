@@ -71,11 +71,11 @@ def main():
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Calculating additional columns...")
         df = calculate_additional_columns(delegators, earnings)
 
-        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Saving delegators list to XLSX...")
-        save_delegators_to_xlsx(df, earnings)
-
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Processing payments...")
         process_payments(df)
+
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Saving delegators list to XLSX...")
+        save_delegators_to_xlsx(df, earnings)
 
     except Exception as e:
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error in main execution: {e}")

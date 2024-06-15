@@ -7,6 +7,7 @@ import os
 import hashlib
 from Crypto.Hash import RIPEMD160
 from colorama import Fore, Style, init
+from modules.transaction import get_transaction_id
 
 # Initialize colorama
 init(autoreset=True)
@@ -52,6 +53,14 @@ def check_balance(wallet):
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error checking NEXO balance: {e}")
         return 0.0
 
+def wait_for_transaction(wallet, initial_balance, payment_amount):
+    while True:
+        time.sleep(3)
+        current_balance = check_balance(wallet)
+        if current_balance == initial_balance - payment_amount:
+            return current_balance
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Waiting for transaction to be reflected in the blockchain...")
+
 def process_payments(df):
     try:
         payments_enabled = os.getenv("ACTIVATE_PAYMENTS", "False") == "True"
@@ -75,6 +84,7 @@ def process_payments(df):
         ignore_payment_accounts = os.getenv('IGNORE_PAYMENT_ACCOUNTS', '').split(',')
 
         payments_made = False
+        df["TxID"] = ""
 
         for index, row in df.iterrows():
             try:
@@ -84,13 +94,15 @@ def process_payments(df):
 
                 if delegator not in [receiver_account, "Partner Accounts", "Total", "Earnings for the period", "APR"] + partner_accounts and payment_amount > 0:
                     if delegator not in ignore_payment_accounts:
-                        # Pause for 10 seconds to ensure transaction is reflected on the blockchain
-                        time.sleep(10)
-                        current_balance = check_balance(wallet)
-                        if payment_amount <= current_balance:
+                        initial_balance = check_balance(wallet)
+                        if payment_amount <= initial_balance:
                             wallet.transfer(delegator, str(f"{payment_amount:.3f}"), token_name, "Delegation payment")
                             payments_made = True
                             print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Payment of {Fore.YELLOW}{payment_amount}{Style.RESET_ALL} {Fore.YELLOW}{token_name}{Style.RESET_ALL} to {Fore.BLUE}{delegator}{Style.RESET_ALL} completed successfully.")
+                            # Wait for the transaction to be reflected in the blockchain
+                            final_balance = wait_for_transaction(wallet, initial_balance, payment_amount)
+                            txid = get_transaction_id(payment_account.name, delegator, payment_amount, token_name)
+                            df.at[index, "TxID"] = txid if txid else "Not found"
                         else:
                             print(f"{Fore.RED}[Error]{Style.RESET_ALL} Insufficient balance to pay {Fore.YELLOW}{payment_amount}{Style.RESET_ALL} {Fore.YELLOW}{token_name}{Style.RESET_ALL} to {Fore.BLUE}{delegator}{Style.RESET_ALL}.")
             except Exception as e:

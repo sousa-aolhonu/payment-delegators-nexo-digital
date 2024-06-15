@@ -2,6 +2,7 @@ beem
 requests
 python-dotenv
 pandas
+xlsxwriter
 hiveengine
 pycryptodome
 colorama
