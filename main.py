@@ -15,12 +15,36 @@ init(autoreset=True)
 
 load_dotenv()
 
+def check_env_variables():
+    required_vars = [
+        "RECEIVER_ACCOUNT", "PAYMENT_ACCOUNT", "HIVE_ENGINE_ACTIVE_PRIVATE_KEY", 
+        "HIVE_ENGINE_POSTING_PRIVATE_KEY", "TOKEN_NAME", "TOKEN_FIXED_PRICE", 
+        "HIVE_DEDUCTION_MULTIPLIER", "ACTIVATE_PAYMENTS"
+    ]
+    for var in required_vars:
+        if not os.getenv(var):
+            raise EnvironmentError(f"Environment variable {var} is not set")
+
 def get_own_hp(receiver_account):
     try:
         return get_account_info(receiver_account)
     except Exception as e:
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching own HP: {e}")
         return 0
+
+def fetch_delegators_info(receiver_account):
+    print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching delegators list...")
+    delegators_list = fetch_delegators()
+    partner_accounts = get_partner_accounts()
+    ignore_payment_accounts = get_ignore_payment_accounts()
+    return delegators_list, partner_accounts, ignore_payment_accounts
+
+def calculate_earnings(own_hp, receiver_account):
+    print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching latest file...")
+    latest_file = get_latest_file('data', 'pd_')
+    previous_own_hp = round(get_previous_own_hp(latest_file, receiver_account), 3)
+    earnings = round(own_hp - previous_own_hp, 3)
+    return earnings
 
 def process_delegators(delegators_list, partner_accounts):
     partner_hp = 0
@@ -42,31 +66,26 @@ def process_delegators(delegators_list, partner_accounts):
     partner_hp = round(partner_hp, 3)
     return delegators, partner_hp
 
-def insert_accounts_into_df(delegators, receiver_account, receiver_hp, partner_hp, ignore_payment_accounts):
+def insert_accounts_into_df(delegators, receiver_account, receiver_hp, partner_hp):
     delegators.insert(0, {"Account": receiver_account, "Delegated HP": receiver_hp})
     delegators.insert(1, {"Account": "Partner Accounts", "Delegated HP": partner_hp})
     return delegators
 
 def main():
     try:
+        check_env_variables()
+
         receiver_account = os.getenv("RECEIVER_ACCOUNT")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching own HP for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
         own_hp = round(get_own_hp(receiver_account), 3)
 
-        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching latest file...")
-        latest_file = get_latest_file('data', 'pd_')
-        previous_own_hp = round(get_previous_own_hp(latest_file, receiver_account), 3)
+        earnings = calculate_earnings(own_hp, receiver_account)
 
-        earnings = round(own_hp - previous_own_hp, 3)
-
-        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching delegators list...")
-        delegators_list = fetch_delegators()
-        partner_accounts = get_partner_accounts()
-        ignore_payment_accounts = get_ignore_payment_accounts()
+        delegators_list, partner_accounts, ignore_payment_accounts = fetch_delegators_info(receiver_account)
 
         delegators, partner_hp = process_delegators(delegators_list, partner_accounts)
 
-        delegators = insert_accounts_into_df(delegators, receiver_account, own_hp, partner_hp, ignore_payment_accounts)
+        delegators = insert_accounts_into_df(delegators, receiver_account, own_hp, partner_hp)
 
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Calculating additional columns...")
         df = calculate_additional_columns(delegators, earnings)

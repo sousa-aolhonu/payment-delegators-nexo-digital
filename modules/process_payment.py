@@ -1,6 +1,5 @@
 from colorama import Fore, Style
-from modules.transaction import get_transaction_id
-from modules.wallet_utils import check_balance, wait_for_transaction
+from modules.wallet_utils import check_balance, wait_for_transaction, wait_for_transaction_id
 
 def process_payment_for_delegator(wallet, payment_account, token_name, delegator, payment_amount, df, index):
     initial_balance = check_balance(wallet)
@@ -10,7 +9,7 @@ def process_payment_for_delegator(wallet, payment_account, token_name, delegator
         # Wait for the transaction to be reflected in the blockchain
         final_balance = wait_for_transaction(wallet, initial_balance, payment_amount)
         if final_balance is not None:
-            txid = get_transaction_id(payment_account.name, delegator, payment_amount, token_name)
+            txid = wait_for_transaction_id(payment_account.name, delegator, payment_amount, token_name)
             df.at[index, "TxID"] = txid if txid else "Not found"
             return True
         else:
