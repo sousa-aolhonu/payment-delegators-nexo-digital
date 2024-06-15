@@ -1,3 +1,4 @@
+import time
 from beem import Hive
 from beem.account import Account
 from hiveengine.wallet import Wallet as HiveEngineWallet
@@ -68,8 +69,6 @@ def process_payments(df):
             print(f"{Fore.RED}[Error]{Style.RESET_ALL} Failed to configure Hive Engine Wallet.")
             return
 
-        nexo_balance = check_balance(wallet)
-
         token_name = os.getenv('TOKEN_NAME', 'NEXO')
         receiver_account = os.getenv('RECEIVER_ACCOUNT')
         partner_accounts = os.getenv('PARTNER_ACCOUNTS', '').split(',')
@@ -85,9 +84,11 @@ def process_payments(df):
 
                 if delegator not in [receiver_account, "Partner Accounts", "Total", "Earnings for the period", "APR"] + partner_accounts and payment_amount > 0:
                     if delegator not in ignore_payment_accounts:
-                        if payment_amount <= nexo_balance:
+                        # Pause for 10 seconds to ensure transaction is reflected on the blockchain
+                        time.sleep(10)
+                        current_balance = check_balance(wallet)
+                        if payment_amount <= current_balance:
                             wallet.transfer(delegator, str(f"{payment_amount:.3f}"), token_name, "Delegation payment")
-                            nexo_balance -= payment_amount
                             payments_made = True
                             print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Payment of {Fore.YELLOW}{payment_amount}{Style.RESET_ALL} {Fore.YELLOW}{token_name}{Style.RESET_ALL} to {Fore.BLUE}{delegator}{Style.RESET_ALL} completed successfully.")
                         else:
@@ -98,7 +99,7 @@ def process_payments(df):
         if not payments_made:
             print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} No payments were made because there were no eligible delegators or sufficient balances.")
         
-        nexo_balance = round(nexo_balance, 3)
-        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Updated {Fore.YELLOW}{token_name}{Style.RESET_ALL} balance after payments: {Fore.YELLOW}{nexo_balance}{Style.RESET_ALL}")
+        final_balance = check_balance(wallet)
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Updated {Fore.YELLOW}{token_name}{Style.RESET_ALL} balance after payments: {Fore.YELLOW}{final_balance}{Style.RESET_ALL}")
     except Exception as e:
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error in payment process: {e}")
