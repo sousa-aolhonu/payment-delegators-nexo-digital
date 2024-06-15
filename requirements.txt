@@ -4,3 +4,4 @@ python-dotenv
 pandas
 hiveengine
 pycryptodome
+colorama
