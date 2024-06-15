@@ -14,7 +14,7 @@ def check_balance(wallet):
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error checking NEXO balance: {e}")
         return 0.0
 
-def wait_for_transaction(wallet, initial_balance, payment_amount, max_attempts=10, wait_time=3):
+def wait_for_transaction(wallet, initial_balance, payment_amount, max_attempts=1000, wait_time=10):
     attempts = 0
     while attempts < max_attempts:
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Waiting for {wait_time} seconds before checking transaction...")
@@ -29,7 +29,7 @@ def wait_for_transaction(wallet, initial_balance, payment_amount, max_attempts=1
     print(f"{Fore.RED}[Error]{Style.RESET_ALL} Transaction not reflected after {max_attempts} attempts.")
     return None
 
-def wait_for_transaction_id(payment_account, delegator, payment_amount, token_name, max_attempts=10, wait_time=3):
+def wait_for_transaction_id(payment_account, delegator, payment_amount, token_name, max_attempts=1000, wait_time=10):
     from modules.transaction import get_transaction_id  # Importar aqui para evitar importação circular
 
     attempts = 0
