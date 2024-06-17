@@ -11,7 +11,6 @@ from modules.payments import process_payments
 from modules.calculations import calculate_additional_columns
 from tabulate import tabulate
 
-# Initialize colorama
 init(autoreset=True)
 
 load_dotenv()

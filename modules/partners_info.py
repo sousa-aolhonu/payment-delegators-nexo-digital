@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 import os
 from colorama import Fore, Style, init
 
-# Initialize colorama
 init(autoreset=True)
 
 load_dotenv()

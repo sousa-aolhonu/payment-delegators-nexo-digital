@@ -15,7 +15,7 @@ def check_balance(wallet):
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Checking balance...")
         balances = wallet.get_balances()
         nexo_balance = next((item["balance"] for item in balances if item["symbol"] == "NEXO"), 0.0)
-        nexo_balance = float(nexo_balance)  # Garantir que seja float antes de arredondar
+        nexo_balance = float(nexo_balance)
         nexo_balance = round(nexo_balance, 3)
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} NEXO balance retrieved: {Fore.YELLOW}{nexo_balance}{Style.RESET_ALL}")
         return nexo_balance
@@ -66,7 +66,7 @@ def wait_for_transaction_id(payment_account, delegator, payment_amount, token_na
     Returns:
         str: The transaction ID if found, None otherwise.
     """
-    from modules.transaction import get_transaction_id  # Importar aqui para evitar importação circular
+    from modules.transaction import get_transaction_id
 
     attempts = 0
     while attempts < max_attempts:

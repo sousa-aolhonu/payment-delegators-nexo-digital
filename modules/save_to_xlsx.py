@@ -4,7 +4,6 @@ import os
 from dotenv import load_dotenv
 from colorama import Fore, Style, init
 
-# Initialize colorama
 init(autoreset=True)
 
 load_dotenv()
@@ -68,7 +67,6 @@ def save_delegators_to_xlsx(df, earnings):
 
         df = pd.concat([df, earnings_row, apr_row], ignore_index=True)
 
-        # Add hyperlinks to the TxID column
         for i in range(len(df)):
             txid = df.at[i, "TxID"]
             if txid and txid not in ["Not found", "Failed", "Error", ""]:

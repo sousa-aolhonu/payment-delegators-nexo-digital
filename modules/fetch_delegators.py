@@ -3,10 +3,8 @@ from dotenv import load_dotenv
 import os
 from colorama import Fore, Style, init
 
-# Initialize colorama
 init(autoreset=True)
 
-# Load environment variables from the .env file
 load_dotenv()
 
 def get_delegators(receiver_account):

@@ -3,7 +3,6 @@ import os
 from dotenv import load_dotenv
 from colorama import Fore, Style, init
 
-# Initialize colorama
 init(autoreset=True)
 
 load_dotenv()
@@ -39,7 +38,6 @@ def calculate_additional_columns(delegators, earnings):
         df[f"{token_name} Payment"] = ((df["HIVE Deduction"] * token_fixed_price) * 100).round(3)
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} {token_name} Payment calculated with fixed price {Fore.YELLOW}{token_fixed_price}")
 
-        # Initialize TxID column
         df["TxID"] = "Pending"
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} TxID column initialized with 'Pending' status.")
 

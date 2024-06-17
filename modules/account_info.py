@@ -2,7 +2,6 @@ from beem import Hive
 from beem.account import Account
 from colorama import Fore, Style, init
 
-# Initialize colorama
 init(autoreset=True)
 
 def get_account_info(account_name):

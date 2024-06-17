@@ -2,7 +2,6 @@ import os
 import pandas as pd
 from colorama import Fore, Style, init
 
-# Initialize colorama
 init(autoreset=True)
 
 def get_latest_file(directory, prefix):

@@ -10,7 +10,6 @@ from colorama import Fore, Style, init
 from modules.process_payment import process_payment_for_delegator
 from modules.wallet_utils import check_balance
 
-# Initialize colorama
 init(autoreset=True)
 
 load_dotenv()
