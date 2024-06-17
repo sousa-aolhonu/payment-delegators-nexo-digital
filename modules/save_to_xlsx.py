@@ -10,6 +10,16 @@ init(autoreset=True)
 load_dotenv()
 
 def save_delegators_to_xlsx(df, earnings):
+    """
+    Saves the delegators list to an XLSX file.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the delegators and their details.
+        earnings (float): The earnings for the period.
+
+    Returns:
+        None
+    """
     try:
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Preparing to save delegators list to XLSX...")
         now = datetime.now()

@@ -16,6 +16,16 @@ init(autoreset=True)
 load_dotenv()
 
 def new_hash(name, data=b""):
+    """
+    Creates a new hash using the specified algorithm.
+
+    Args:
+        name (str): The name of the hash algorithm.
+        data (bytes): The data to hash.
+
+    Returns:
+        Hash object: The created hash object.
+    """
     if name == "ripemd160":
         return RIPEMD160.new(data)
     else:
@@ -24,6 +34,12 @@ def new_hash(name, data=b""):
 hashlib.new = new_hash
 
 def configure_hive():
+    """
+    Configures the Hive blockchain connection.
+
+    Returns:
+        tuple: A tuple containing the Hive instance and the payment account, or (None, None) if an error occurs.
+    """
     try:
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Configuring Hive...")
         stm = Hive(node="https://api.hive.blog", keys=[os.getenv("HIVE_ENGINE_ACTIVE_PRIVATE_KEY"), os.getenv("HIVE_ENGINE_POSTING_PRIVATE_KEY")])
@@ -35,6 +51,16 @@ def configure_hive():
         return None, None
 
 def configure_hive_engine_wallet(account, stm):
+    """
+    Configures the Hive Engine wallet for the specified account.
+
+    Args:
+        account (Account): The Hive account.
+        stm (Hive): The Hive blockchain instance.
+
+    Returns:
+        HiveEngineWallet: The configured Hive Engine wallet, or None if an error occurs.
+    """
     try:
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Configuring Hive Engine Wallet...")
         wallet = HiveEngineWallet(account.name, steem_instance=stm)
@@ -45,6 +71,12 @@ def configure_hive_engine_wallet(account, stm):
         return None
 
 def process_payments(df):
+    """
+    Processes the payments for the delegators listed in the DataFrame.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the delegators and payment information.
+    """
     try:
         payments_enabled = os.getenv("ACTIVATE_PAYMENTS", "False") == "True"
         if not payments_enabled:

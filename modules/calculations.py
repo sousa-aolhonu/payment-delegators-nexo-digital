@@ -9,6 +9,16 @@ init(autoreset=True)
 load_dotenv()
 
 def calculate_additional_columns(delegators, earnings):
+    """
+    Calculates additional columns for the DataFrame of delegators.
+
+    Args:
+        delegators (list of dict): List of delegators with their account names and delegated HP.
+        earnings (float): The earnings for the period.
+
+    Returns:
+        pd.DataFrame: DataFrame with additional columns calculated, or an empty DataFrame if an error occurs.
+    """
     try:
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Calculating additional columns...")
         df = pd.DataFrame(delegators)
