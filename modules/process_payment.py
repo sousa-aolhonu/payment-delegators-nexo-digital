@@ -24,7 +24,7 @@ def process_payment_for_delegator(wallet, payment_account, token_name, delegator
 
         if payment_amount <= initial_balance:
             print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Initiating payment of {Fore.YELLOW}{payment_amount} {token_name}{Style.RESET_ALL} to {Fore.BLUE}{delegator}{Style.RESET_ALL}...")
-            wallet.transfer(delegator, str(f"{payment_amount:.3f}"), token_name, "Delegation payment")
+            wallet.transfer(delegator, str(f"{payment_amount:.3f}"), token_name, "Reward for Hive Power delegation")
             print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Payment of {Fore.YELLOW}{payment_amount}{Style.RESET_ALL} {token_name} to {Fore.BLUE}{delegator}{Style.RESET_ALL} completed successfully.")
 
             print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Waiting for transaction to be reflected in the blockchain...")
