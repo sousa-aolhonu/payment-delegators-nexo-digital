@@ -1,4 +1,6 @@
 import os
+import logging
+from datetime import datetime
 from dotenv import load_dotenv
 import pandas as pd
 from colorama import Fore, Style, init
@@ -9,11 +11,12 @@ from modules.utils import get_latest_file, get_previous_own_hp
 from modules.save_to_xlsx import save_delegators_to_xlsx
 from modules.payments import process_payments
 from modules.calculations import calculate_additional_columns
+from modules.logger import setup_logging
+from modules.telegram_utils import send_telegram_file
+from modules.discord_utils import send_discord_file
 from tabulate import tabulate
 
 init(autoreset=True)
-
-load_dotenv()
 
 def check_env_variables():
     """
@@ -25,13 +28,16 @@ def check_env_variables():
     required_vars = [
         "RECEIVER_ACCOUNT", "PAYMENT_ACCOUNT", "HIVE_ENGINE_ACTIVE_PRIVATE_KEY", 
         "HIVE_ENGINE_POSTING_PRIVATE_KEY", "TOKEN_NAME", "TOKEN_FIXED_PRICE", 
-        "HIVE_DEDUCTION_MULTIPLIER", "ACTIVATE_PAYMENTS"
+        "HIVE_DEDUCTION_MULTIPLIER", "ACTIVATE_PAYMENTS", "TELEGRAM_BOT_TOKEN",
+        "TELEGRAM_CHAT_ID", "DISCORD_BOT_TOKEN", "DISCORD_CHANNEL_ID"
     ]
     for var in required_vars:
         if not os.getenv(var):
+            logging.error(f"Environment variable {var} is not set")
             print(f"{Fore.RED}[Error]{Style.RESET_ALL} Environment variable {Fore.BLUE}{var}{Style.RESET_ALL} is not set")
             raise EnvironmentError(f"Environment variable {var} is not set")
         else:
+            logging.info(f"Environment variable {var} is set: {os.getenv(var)}")
             print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Environment variable {Fore.BLUE}{var}{Style.RESET_ALL} is set: {Fore.YELLOW}{os.getenv(var)}")
 
 def get_own_hp(receiver_account):
@@ -48,11 +54,14 @@ def get_own_hp(receiver_account):
         Exception: If there is an error fetching the account information.
     """
     try:
+        logging.info(f"Fetching own HP for {receiver_account}...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching own HP for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
         own_hp = get_account_info(receiver_account)
+        logging.info(f"Own HP for {receiver_account} is {own_hp}")
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Own HP for {Fore.BLUE}{receiver_account}{Style.RESET_ALL} is {Fore.YELLOW}{own_hp}")
         return own_hp
     except Exception as e:
+        logging.error(f"Error fetching own HP for {receiver_account}: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching own HP for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}: {e}")
         raise
 
@@ -70,17 +79,27 @@ def fetch_delegators_info(receiver_account):
         Exception: If there is an error fetching the delegators info.
     """
     try:
+        logging.info(f"Fetching delegators list for {receiver_account}...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching delegators list for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
         delegators_list = fetch_delegators()
+        logging.info(f"Delegators list fetched successfully.")
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators list fetched successfully.")
+        
+        logging.info("Fetching partner accounts...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching partner accounts...")
         partner_accounts = get_partner_accounts()
+        logging.info("Partner accounts fetched successfully.")
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Partner accounts fetched successfully.")
+        
+        logging.info("Fetching ignore payment accounts...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching ignore payment accounts...")
         ignore_payment_accounts = get_ignore_payment_accounts()
+        logging.info("Ignore payment accounts fetched successfully.")
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Ignore payment accounts fetched successfully.")
+        
         return delegators_list, partner_accounts, ignore_payment_accounts
     except Exception as e:
+        logging.error(f"Error fetching delegators info: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching delegators info: {e}")
         raise
 
@@ -99,16 +118,25 @@ def calculate_earnings(own_hp, receiver_account):
         Exception: If there is an error calculating the earnings.
     """
     try:
+        logging.info(f"Fetching latest file for {receiver_account}...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching latest file for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
         latest_file = get_latest_file('data', 'pd_')
+        logging.info(f"Latest file found: {latest_file}")
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Latest file found: {Fore.YELLOW}{latest_file}")
+        
+        logging.info(f"Fetching previous own HP from latest file...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching previous own HP from latest file...")
         previous_own_hp = round(get_previous_own_hp(latest_file, receiver_account), 3)
+        logging.info(f"Previous own HP: {previous_own_hp}")
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Previous own HP: {Fore.YELLOW}{previous_own_hp}")
+        
         earnings = round(own_hp - previous_own_hp, 3)
+        logging.info(f"Earnings calculated: {earnings}")
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Earnings calculated: {Fore.YELLOW}{earnings}")
+        
         return earnings
     except Exception as e:
+        logging.error(f"Error calculating earnings: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error calculating earnings: {e}")
         raise
 
@@ -127,6 +155,7 @@ def process_delegators(delegators_list, partner_accounts):
         Exception: If there is an error processing the delegators.
     """
     try:
+        logging.info("Processing delegators list...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Processing delegators list...")
         partner_hp = 0
         delegators = []
@@ -142,13 +171,17 @@ def process_delegators(delegators_list, partner_accounts):
                         "Account": delegator,
                         "Delegated HP": delegated_hp
                     })
+                logging.info(f"Processed delegator {delegator}: {delegated_hp} HP")
                 print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Processed delegator {Fore.BLUE}{delegator}{Style.RESET_ALL}: {Fore.YELLOW}{delegated_hp} HP")
             except Exception as e:
+                logging.error(f"Error processing delegator {item}: {e}")
                 print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error processing delegator {Fore.BLUE}{item}{Style.RESET_ALL}: {e}")
         partner_hp = round(partner_hp, 3)
+        logging.info(f"Delegators processed successfully. Partner HP: {partner_hp}")
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators processed successfully. Partner HP: {Fore.YELLOW}{partner_hp}")
         return delegators, partner_hp
     except Exception as e:
+        logging.error(f"Error processing delegators: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error processing delegators: {e}")
         raise
 
@@ -169,12 +202,15 @@ def insert_accounts_into_df(delegators, receiver_account, receiver_hp, partner_h
         Exception: If there is an error inserting the accounts into the DataFrame.
     """
     try:
+        logging.info("Inserting accounts into DataFrame...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Inserting accounts into DataFrame...")
         delegators.insert(0, {"Account": receiver_account, "Delegated HP": receiver_hp})
         delegators.insert(1, {"Account": "Partner Accounts", "Delegated HP": partner_hp})
+        logging.info("Accounts inserted into DataFrame successfully.")
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Accounts inserted into DataFrame successfully.")
         return delegators
     except Exception as e:
+        logging.error(f"Error inserting accounts into DataFrame: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error inserting accounts into DataFrame: {e}")
         raise
 
@@ -187,6 +223,15 @@ def main():
     and saves the delegators list to an XLSX file.
     """
     try:
+        # Generate the timestamp for filenames
+        now = datetime.now()
+        timestamp = now.strftime("pd_%m-%d-%Y_%H-%M-%S")
+
+        # Set up logging with the generated timestamp
+        setup_logging(timestamp)
+
+        load_dotenv()
+
         check_env_variables()
 
         receiver_account = os.getenv("RECEIVER_ACCOUNT")
@@ -200,23 +245,39 @@ def main():
 
         delegators = insert_accounts_into_df(delegators, receiver_account, own_hp, partner_hp)
 
+        logging.info("Calculating additional columns...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Calculating additional columns...")
         df = calculate_additional_columns(delegators, earnings)
         df["Unique Hash"] = ""
+        logging.info("Additional columns calculated successfully.")
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Additional columns calculated successfully.")
 
+        logging.info("DataFrame before rewards:")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} DataFrame before rewards:")
         print(tabulate(df, headers='keys', tablefmt='psql'))
 
+        logging.info("Processing rewards...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Processing rewards...")
         process_payments(df)
 
+        logging.info("Saving delegators list to XLSX...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Saving delegators list to XLSX...")
         save_delegators_to_xlsx(df, earnings)
 
+        logging.info("All tasks completed successfully.")
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} All tasks completed successfully.")
+
     except Exception as e:
+        logging.error(f"Error in main execution: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error in main execution: {e}")
+    finally:
+        # Ensure the log is sent even if an error occurs
+        log_file_path = f"data/log/log_{timestamp}.txt"
+        send_telegram_file(log_file_path, "Log file for the latest execution")
+
+        # Verify the latest file generated for spreadsheet
+        latest_xlsx_file = get_latest_file('data', 'pd_')
+        send_discord_file(latest_xlsx_file, "Spreadsheet for the latest execution")
 
 if __name__ == "__main__":
     main()
