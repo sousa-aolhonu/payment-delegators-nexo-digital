@@ -42,7 +42,8 @@ def save_delegators_to_xlsx(df, earnings):
             "Percentage": 100.000,
             "HIVE Deduction": total_hive_deduction,
             f"{token_name} Payment": total_token_payment,
-            "TxID": ""
+            "TxID": "",
+            "Unique Hash": ""
         }])
 
         df = pd.concat([df, total_row], ignore_index=True)
@@ -53,7 +54,8 @@ def save_delegators_to_xlsx(df, earnings):
             "Percentage": "",
             "HIVE Deduction": "",
             f"{token_name} Payment": "",
-            "TxID": ""
+            "TxID": "",
+            "Unique Hash": ""
         }])
 
         apr_row = pd.DataFrame([{
@@ -62,10 +64,15 @@ def save_delegators_to_xlsx(df, earnings):
             "Percentage": "",
             "HIVE Deduction": "",
             f"{token_name} Payment": "",
-            "TxID": ""
+            "TxID": "",
+            "Unique Hash": ""
         }])
 
         df = pd.concat([df, earnings_row, apr_row], ignore_index=True)
+
+        # Remove the Memo column from the DataFrame
+        if "Memo" in df.columns:
+            df = df.drop(columns=["Memo"])
 
         for i in range(len(df)):
             txid = df.at[i, "TxID"]

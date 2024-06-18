@@ -202,12 +202,13 @@ def main():
 
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Calculating additional columns...")
         df = calculate_additional_columns(delegators, earnings)
+        df["Unique Hash"] = ""
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Additional columns calculated successfully.")
 
-        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} DataFrame before payments:")
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} DataFrame before rewards:")
         print(tabulate(df, headers='keys', tablefmt='psql'))
 
-        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Processing payments...")
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Processing rewards...")
         process_payments(df)
 
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Saving delegators list to XLSX...")
