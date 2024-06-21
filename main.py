@@ -230,15 +230,24 @@ def main():
         logging.info("Additional columns calculated successfully.")
 
         logging.info("DataFrame before rewards:")
-        print(tabulate(df, headers='keys', tablefmt='psql'))  # Exibir a planilha no terminal
-        logging.debug(f"\n{tabulate(df, headers='keys', tablefmt='psql')}")
+        df_display = df.copy()
+        df_display["Delegated HP"] = df_display.apply(
+            lambda x: f"{x['Delegated HP']} HP" if x["Account"] != "APR" else x["Delegated HP"],
+            axis=1
+        )
+        df_display["HIVE Deduction"] = df_display["HIVE Deduction"].apply(lambda x: f"{x} HIVE" if x != "" else x)  # Adicionar " HIVE" visualmente
+        token_name = os.getenv("TOKEN_NAME", "NEXO")
+        df_display[f"{token_name} Payment"] = df_display[f"{token_name} Payment"].apply(lambda x: f"{x} {token_name}" if x != "" else x)  # Adicionar TOKEN_NAME visualmente
+        df_display["Percentage"] = df_display["Percentage"].apply(lambda x: f"{x}%" if pd.notnull(x) and x != "" and not str(x).endswith('%') else x)  # Adicionar % visualmente, evitando duplicação
+        print(tabulate(df_display, headers='keys', tablefmt='psql'))  # Exibir a planilha no terminal
+        logging.debug(f"\n{tabulate(df_display, headers='keys', tablefmt='psql')}")
 
         logging.info("Processing rewards...")
         payments_enabled = os.getenv("ACTIVATE_PAYMENTS", "False") == "True"
         if payments_enabled:
             process_payments(df)
         else:
-            print(tabulate(df, headers='keys', tablefmt='psql'))  # Exibir a planilha no terminal antes de enviar o arquivo de log e a planilha
+            print(tabulate(df_display, headers='keys', tablefmt='psql'))  # Exibir a planilha no terminal antes de enviar o arquivo de log e a planilha
             logging.info("Payments are deactivated. Only spreadsheets will be generated.")
 
         logging.info("Saving delegators list to XLSX...")

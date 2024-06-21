@@ -25,7 +25,7 @@ def save_delegators_to_xlsx(df, earnings):
         timestamp = now.strftime("pd_%m-%d-%Y_%H-%M-%S")
         filename = f"data/{timestamp}.xlsx"
         
-        total_hp = df["Delegated HP"].sum().round(3)
+        total_hp = df["Delegated HP"].astype(float).sum().round(3)
         total_hive_deduction = df["HIVE Deduction"].sum().round(3)
         token_name = os.getenv("TOKEN_NAME", "NEXO")
         total_token_payment = df[f"{token_name} Payment"].sum().round(3)
@@ -39,7 +39,7 @@ def save_delegators_to_xlsx(df, earnings):
         total_row = pd.DataFrame([{
             "Account": "Total",
             "Delegated HP": total_hp,
-            "Percentage": 100.000,
+            "Percentage": "100%",  # Adicionar % visualmente
             "HIVE Deduction": total_hive_deduction,
             f"{token_name} Payment": total_token_payment,
             "TxID": "",
@@ -50,7 +50,7 @@ def save_delegators_to_xlsx(df, earnings):
 
         earnings_row = pd.DataFrame([{
             "Account": "Earnings for the period",
-            "Delegated HP": round(earnings, 3),
+            "Delegated HP": earnings,
             "Percentage": "",
             "HIVE Deduction": "",
             f"{token_name} Payment": "",
@@ -60,8 +60,8 @@ def save_delegators_to_xlsx(df, earnings):
 
         apr_row = pd.DataFrame([{
             "Account": "APR",
-            "Delegated HP": apr,
-            "Percentage": "",
+            "Delegated HP": f"{apr}%",  # Remover o valor bruto
+            "Percentage": "",  # Adicionar % visualmente
             "HIVE Deduction": "",
             f"{token_name} Payment": "",
             "TxID": "",
@@ -82,19 +82,50 @@ def save_delegators_to_xlsx(df, earnings):
         if "Memo" in df_reordered.columns:
             df_reordered = df_reordered.drop(columns=["Memo"])
 
-        for i in range(len(df_reordered)):
-            txid = df_reordered.at[i, "TxID"]
+        # Adicionar " HP" visualmente na coluna Delegated HP para a exibição
+        df_reordered_display = df_reordered.copy()
+        df_reordered_display["Delegated HP"] = df_reordered_display.apply(
+            lambda x: f"{x['Delegated HP']} HP" if x["Account"] != "APR" else x["Delegated HP"],
+            axis=1
+        )
+
+        # Adicionar " HIVE" visualmente na coluna HIVE Deduction, exceto nas linhas específicas
+        def add_hive_display(value):
+            if value != "" and not str(value).endswith(" HIVE"):
+                return f"{value} HIVE"
+            return value
+
+        df_reordered_display["HIVE Deduction"] = df_reordered_display["HIVE Deduction"].apply(add_hive_display)
+
+        # Adicionar % visualmente na coluna Percentage, evitando duplicação
+        def format_percentage(x):
+            if pd.notnull(x) and x != "" and not str(x).endswith('%'):
+                return f"{x}%"
+            return x
+
+        df_reordered_display["Percentage"] = df_reordered_display["Percentage"].apply(format_percentage)
+
+        # Adicionar TOKEN_NAME visualmente na coluna TOKEN_NAME Payment, exceto nas linhas específicas
+        def add_token_display(value):
+            if value != "" and not str(value).endswith(f" {token_name}"):
+                return f"{value} {token_name}"
+            return value
+
+        df_reordered_display[f"{token_name} Payment"] = df_reordered_display[f"{token_name} Payment"].apply(add_token_display)
+
+        for i in range(len(df_reordered_display)):
+            txid = df_reordered_display.at[i, "TxID"]
             if txid and txid not in ["Not found", "Failed", "Error", ""]:
-                df_reordered.at[i, "TxID"] = f'=HYPERLINK("https://he.dtools.dev/tx/{txid}", "{txid}")'
+                df_reordered_display.at[i, "TxID"] = f'=HYPERLINK("https://he.dtools.dev/tx/{txid}", "{txid}")'
 
         with pd.ExcelWriter(filename, engine='xlsxwriter') as writer:
-            df_reordered.to_excel(writer, index=False, sheet_name='Delegators')
+            df_reordered_display.to_excel(writer, index=False, sheet_name='Delegators')
             workbook  = writer.book
             worksheet = writer.sheets['Delegators']
 
-            for i, txid in enumerate(df_reordered["TxID"]):
+            for i, txid in enumerate(df_reordered_display["TxID"]):
                 if txid.startswith('=HYPERLINK'):
-                    worksheet.write_formula(i + 1, df_reordered.columns.get_loc("TxID"), txid)
+                    worksheet.write_formula(i + 1, df_reordered_display.columns.get_loc("TxID"), txid)
 
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators list successfully saved in '{Fore.YELLOW}{filename}{Style.RESET_ALL}'.")
     except Exception as e:

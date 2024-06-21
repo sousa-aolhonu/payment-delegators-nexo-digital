@@ -45,6 +45,7 @@ def get_previous_own_hp(latest_file, receiver_account):
             print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Reading latest file {Fore.BLUE}{latest_file}{Style.RESET_ALL} to get previous own HP for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
             df = pd.read_excel(latest_file)
             previous_own_hp = df.loc[df['Account'] == receiver_account, 'Delegated HP'].values[0]
+            previous_own_hp = float(str(previous_own_hp).replace(" HP", ""))  # Remove " HP" e converte para float
             print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Previous own HP retrieved: {Fore.YELLOW}{previous_own_hp}{Style.RESET_ALL}")
             return previous_own_hp
     except Exception as e:
