@@ -9,7 +9,7 @@ load_dotenv()
 
 def get_delegators(receiver_account):
     """
-    Fetches the list of delegators for a given receiver account.
+    Fetches the list of delegators for a given receiver account, using multiple endpoints as fallback options.
 
     Args:
         receiver_account (str): The name of the receiver account.
@@ -17,20 +17,34 @@ def get_delegators(receiver_account):
     Returns:
         list: A list of delegators with their vesting shares, or an empty list if an error occurs.
     """
-    try:
-        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching delegators for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
-        url = f"https://ecency.com/private-api/received-vesting/{receiver_account}"
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
-        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators fetched successfully.")
-        return data['list']
-    except requests.exceptions.RequestException as e:
-        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching delegators: {e}")
-        return []
-    except KeyError as e:
-        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Unexpected response format: {e}")
-        return []
+    endpoints = [
+        f"https://peakd.com/api/public/delegations/incoming?delegatee={receiver_account}",
+        f"https://ecency.com/private-api/received-vesting/{receiver_account}",
+        f"https://api.hive-keychain.com/hive/delegators/{receiver_account}"
+    ]
+
+    for url in endpoints:
+        try:
+            print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching delegators for {Fore.BLUE}{receiver_account}{Style.RESET_ALL} from {url}...")
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+
+            # Handle data format differences between endpoints
+            if "peakd" in url:
+                delegators = [{"delegator": item["delegator"], "vesting_shares": float(item["vests"])} for item in data]
+            elif "ecency" in url:
+                delegators = [{"delegator": item["delegator"], "vesting_shares": float(item["vesting_shares"].replace(' VESTS', ''))} for item in data['list']]
+            elif "hive-keychain" in url:
+                delegators = [{"delegator": item["delegator"], "vesting_shares": item["vesting_shares"]} for item in data]
+                delegators = [item for item in delegators if item["vesting_shares"] > 0]  # Remove zero vesting shares
+
+            print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators fetched successfully from {url}.")
+            return delegators
+        except Exception as e:
+            print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching delegators from {url}: {e}")
+
+    return []
 
 def fetch_delegators():
     """

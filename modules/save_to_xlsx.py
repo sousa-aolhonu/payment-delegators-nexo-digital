@@ -70,22 +70,31 @@ def save_delegators_to_xlsx(df, earnings):
 
         df = pd.concat([df, earnings_row, apr_row], ignore_index=True)
 
-        if "Memo" in df.columns:
-            df = df.drop(columns=["Memo"])
+        # Ordenar as contas com base no valor de Delegated HP, mantendo RECEIVER_ACCOUNT e PARTNER_ACCOUNTS no topo
+        receiver_account = os.getenv("RECEIVER_ACCOUNT")
+        df_reordered = pd.concat([
+            df[df["Account"] == receiver_account],
+            df[df["Account"] == "Partner Accounts"],
+            df[~df["Account"].isin([receiver_account, "Partner Accounts", "Total", "Earnings for the period", "APR"])].sort_values(by="Delegated HP", ascending=False),
+            df[df["Account"].isin(["Total", "Earnings for the period", "APR"])]
+        ], ignore_index=True)
 
-        for i in range(len(df)):
-            txid = df.at[i, "TxID"]
+        if "Memo" in df_reordered.columns:
+            df_reordered = df_reordered.drop(columns=["Memo"])
+
+        for i in range(len(df_reordered)):
+            txid = df_reordered.at[i, "TxID"]
             if txid and txid not in ["Not found", "Failed", "Error", ""]:
-                df.at[i, "TxID"] = f'=HYPERLINK("https://he.dtools.dev/tx/{txid}", "{txid}")'
+                df_reordered.at[i, "TxID"] = f'=HYPERLINK("https://he.dtools.dev/tx/{txid}", "{txid}")'
 
         with pd.ExcelWriter(filename, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name='Delegators')
+            df_reordered.to_excel(writer, index=False, sheet_name='Delegators')
             workbook  = writer.book
             worksheet = writer.sheets['Delegators']
 
-            for i, txid in enumerate(df["TxID"]):
+            for i, txid in enumerate(df_reordered["TxID"]):
                 if txid.startswith('=HYPERLINK'):
-                    worksheet.write_formula(i + 1, df.columns.get_loc("TxID"), txid)
+                    worksheet.write_formula(i + 1, df_reordered.columns.get_loc("TxID"), txid)
 
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators list successfully saved in '{Fore.YELLOW}{filename}{Style.RESET_ALL}'.")
     except Exception as e:
