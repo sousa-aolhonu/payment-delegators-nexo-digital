@@ -1,6 +1,9 @@
 # Ignore the data folder
 data/
 
+# Ignore the backup folder
+backup/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

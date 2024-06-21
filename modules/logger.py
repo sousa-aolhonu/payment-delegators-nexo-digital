@@ -16,10 +16,8 @@ def setup_logging(timestamp, log_dir='data/log', log_filename=None):
     if log_filename is None:
         log_filename = f'log_{timestamp}.txt'
 
-    # Ensure the log directory exists
     os.makedirs(log_dir, exist_ok=True)
 
-    # Set up logging
     logging.basicConfig(
         filename=os.path.join(log_dir, log_filename),
         filemode='w',
@@ -27,7 +25,6 @@ def setup_logging(timestamp, log_dir='data/log', log_filename=None):
         format='%(asctime)s - %(levelname)s - %(message)s'
     )
 
-    # Also log to console
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')

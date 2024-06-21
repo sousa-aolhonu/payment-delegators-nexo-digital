@@ -70,7 +70,6 @@ def save_delegators_to_xlsx(df, earnings):
 
         df = pd.concat([df, earnings_row, apr_row], ignore_index=True)
 
-        # Remove the Memo column from the DataFrame
         if "Memo" in df.columns:
             df = df.drop(columns=["Memo"])
 
