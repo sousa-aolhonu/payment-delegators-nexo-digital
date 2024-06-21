@@ -4,6 +4,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import pandas as pd
 from colorama import Fore, Style, init
+from tabulate import tabulate
 from modules.fetch_delegators import fetch_delegators
 from modules.account_info import get_account_info, vests_to_hp
 from modules.partners_info import get_partner_accounts, get_ignore_payment_accounts
@@ -14,7 +15,6 @@ from modules.calculations import calculate_additional_columns
 from modules.logger import setup_logging
 from modules.telegram_utils import send_telegram_file
 from modules.discord_utils import send_discord_file
-from tabulate import tabulate
 
 init(autoreset=True)
 
@@ -230,10 +230,16 @@ def main():
         logging.info("Additional columns calculated successfully.")
 
         logging.info("DataFrame before rewards:")
+        print(tabulate(df, headers='keys', tablefmt='psql'))  # Exibir a planilha no terminal
         logging.debug(f"\n{tabulate(df, headers='keys', tablefmt='psql')}")
 
         logging.info("Processing rewards...")
-        process_payments(df)
+        payments_enabled = os.getenv("ACTIVATE_PAYMENTS", "False") == "True"
+        if payments_enabled:
+            process_payments(df)
+        else:
+            print(tabulate(df, headers='keys', tablefmt='psql'))  # Exibir a planilha no terminal antes de enviar o arquivo de log e a planilha
+            logging.info("Payments are deactivated. Only spreadsheets will be generated.")
 
         logging.info("Saving delegators list to XLSX...")
         save_delegators_to_xlsx(df, earnings)
