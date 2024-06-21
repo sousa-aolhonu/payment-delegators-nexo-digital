@@ -1,4 +1,5 @@
 import requests
+import logging
 from dotenv import load_dotenv
 import os
 from colorama import Fore, Style, init
@@ -42,6 +43,7 @@ def get_delegators(receiver_account):
             print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators fetched successfully from {url}.")
             return delegators
         except Exception as e:
+            logging.error(f"Error fetching delegators from {url}: {e}")
             print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching delegators from {url}: {e}")
 
     return []
@@ -62,5 +64,6 @@ def fetch_delegators():
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators fetched successfully.")
         return delegators
     except Exception as e:
+        logging.error(f"Error in fetch_delegators: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error in fetch_delegators: {e}")
         return []

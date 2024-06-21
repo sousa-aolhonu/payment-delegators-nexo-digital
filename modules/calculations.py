@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import logging
 from dotenv import load_dotenv
 from colorama import Fore, Style, init
 
@@ -44,5 +45,6 @@ def calculate_additional_columns(delegators, earnings):
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Additional columns calculated successfully.")
         return df
     except Exception as e:
+        logging.error(f"Error calculating additional columns: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error calculating additional columns: {e}")
         return pd.DataFrame()

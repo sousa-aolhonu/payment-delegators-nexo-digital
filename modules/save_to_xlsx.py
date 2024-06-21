@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 import os
+import logging
 from dotenv import load_dotenv
 from colorama import Fore, Style, init
 
@@ -129,4 +130,5 @@ def save_delegators_to_xlsx(df, earnings):
 
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators list successfully saved in '{Fore.YELLOW}{filename}{Style.RESET_ALL}'.")
     except Exception as e:
+        logging.error(f"Error saving delegators to XLSX: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error saving delegators to XLSX: {e}")
