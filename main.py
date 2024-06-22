@@ -124,7 +124,7 @@ def process_delegators(delegators_list, partner_accounts):
         for item in delegators_list:
             try:
                 delegator = item['delegator']
-                vesting_shares = float(item['vesting_shares'])  # Tratar como float
+                vesting_shares = float(item['vesting_shares'])
                 delegated_hp = round(vests_to_hp(vesting_shares, delegator), 3)
                 if delegator in partner_accounts:
                     partner_hp += delegated_hp
@@ -210,11 +210,11 @@ def main():
             lambda x: f"{x['Delegated HP']} HP" if x["Account"] != "APR" else x["Delegated HP"],
             axis=1
         )
-        df_display["HIVE Deduction"] = df_display["HIVE Deduction"].apply(lambda x: f"{x} HIVE" if x != "" else x)  # Adicionar " HIVE" visualmente
+        df_display["HIVE Deduction"] = df_display["HIVE Deduction"].apply(lambda x: f"{x} HIVE" if x != "" else x)
         token_name = os.getenv("TOKEN_NAME", "NEXO")
-        df_display[f"{token_name} Payment"] = df_display[f"{token_name} Payment"].apply(lambda x: f"{x} {token_name}" if x != "" else x)  # Adicionar TOKEN_NAME visualmente
-        df_display["Percentage"] = df_display["Percentage"].apply(lambda x: f"{x}%" if pd.notnull(x) and x != "" and not str(x).endswith('%') else x)  # Adicionar % visualmente, evitando duplicação
-        print(tabulate(df_display, headers='keys', tablefmt='psql'))  # Exibir a planilha no terminal
+        df_display[f"{token_name} Payment"] = df_display[f"{token_name} Payment"].apply(lambda x: f"{x} {token_name}" if x != "" else x)
+        df_display["Percentage"] = df_display["Percentage"].apply(lambda x: f"{x}%" if pd.notnull(x) and x != "" and not str(x).endswith('%') else x)
+        print(tabulate(df_display, headers='keys', tablefmt='psql'))
         logging.debug(f"\n{tabulate(df_display, headers='keys', tablefmt='psql')}")
 
         logging.info("Processing rewards...")
@@ -222,7 +222,7 @@ def main():
         if payments_enabled:
             process_payments(df)
         else:
-            print(tabulate(df_display, headers='keys', tablefmt='psql'))  # Exibir a planilha no terminal antes de enviar o arquivo de log e a planilha
+            print(tabulate(df_display, headers='keys', tablefmt='psql'))
             logging.info("Payments are deactivated. Only spreadsheets will be generated.")
 
         logging.info("Saving delegators list to XLSX...")

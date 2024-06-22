@@ -31,14 +31,13 @@ def get_delegators(receiver_account):
             response.raise_for_status()
             data = response.json()
 
-            # Handle data format differences between endpoints
             if "peakd" in url:
                 delegators = [{"delegator": item["delegator"], "vesting_shares": float(item["vests"])} for item in data]
             elif "ecency" in url:
                 delegators = [{"delegator": item["delegator"], "vesting_shares": float(item["vesting_shares"].replace(' VESTS', ''))} for item in data['list']]
             elif "hive-keychain" in url:
                 delegators = [{"delegator": item["delegator"], "vesting_shares": item["vesting_shares"]} for item in data]
-                delegators = [item for item in delegators if item["vesting_shares"] > 0]  # Remove zero vesting shares
+                delegators = [item for item in delegators if item["vesting_shares"] > 0]
 
             print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators fetched successfully from {url}.")
             return delegators

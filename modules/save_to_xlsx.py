@@ -40,7 +40,7 @@ def save_delegators_to_xlsx(df, earnings):
         total_row = pd.DataFrame([{
             "Account": "Total",
             "Delegated HP": total_hp,
-            "Percentage": "100%",  # Adicionar % visualmente
+            "Percentage": "100%",
             "HIVE Deduction": total_hive_deduction,
             f"{token_name} Payment": total_token_payment,
             "TxID": "",
@@ -61,8 +61,8 @@ def save_delegators_to_xlsx(df, earnings):
 
         apr_row = pd.DataFrame([{
             "Account": "APR",
-            "Delegated HP": f"{apr}%",  # Remover o valor bruto
-            "Percentage": "",  # Adicionar % visualmente
+            "Delegated HP": f"{apr}%",
+            "Percentage": "",
             "HIVE Deduction": "",
             f"{token_name} Payment": "",
             "TxID": "",
@@ -71,7 +71,6 @@ def save_delegators_to_xlsx(df, earnings):
 
         df = pd.concat([df, earnings_row, apr_row], ignore_index=True)
 
-        # Ordenar as contas com base no valor de Delegated HP, mantendo RECEIVER_ACCOUNT e PARTNER_ACCOUNTS no topo
         receiver_account = os.getenv("RECEIVER_ACCOUNT")
         df_reordered = pd.concat([
             df[df["Account"] == receiver_account],
@@ -83,14 +82,12 @@ def save_delegators_to_xlsx(df, earnings):
         if "Memo" in df_reordered.columns:
             df_reordered = df_reordered.drop(columns=["Memo"])
 
-        # Adicionar " HP" visualmente na coluna Delegated HP para a exibição
         df_reordered_display = df_reordered.copy()
         df_reordered_display["Delegated HP"] = df_reordered_display.apply(
             lambda x: f"{x['Delegated HP']} HP" if x["Account"] != "APR" else x["Delegated HP"],
             axis=1
         )
 
-        # Adicionar " HIVE" visualmente na coluna HIVE Deduction, exceto nas linhas específicas
         def add_hive_display(value):
             if value != "" and not str(value).endswith(" HIVE"):
                 return f"{value} HIVE"
@@ -98,7 +95,6 @@ def save_delegators_to_xlsx(df, earnings):
 
         df_reordered_display["HIVE Deduction"] = df_reordered_display["HIVE Deduction"].apply(add_hive_display)
 
-        # Adicionar % visualmente na coluna Percentage, evitando duplicação
         def format_percentage(x):
             if pd.notnull(x) and x != "" and not str(x).endswith('%'):
                 return f"{x}%"
@@ -106,7 +102,6 @@ def save_delegators_to_xlsx(df, earnings):
 
         df_reordered_display["Percentage"] = df_reordered_display["Percentage"].apply(format_percentage)
 
-        # Adicionar TOKEN_NAME visualmente na coluna TOKEN_NAME Payment, exceto nas linhas específicas
         def add_token_display(value):
             if value != "" and not str(value).endswith(f" {token_name}"):
                 return f"{value} {token_name}"
