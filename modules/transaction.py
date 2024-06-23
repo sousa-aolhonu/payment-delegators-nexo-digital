@@ -3,18 +3,6 @@ import logging
 from colorama import Fore, Style
 
 def get_transaction_id(payment_account, delegator, payment_amount, token_name):
-    """
-    Fetches the transaction ID for a payment from the payment account to the delegator.
-
-    Args:
-        payment_account (str): The account making the payment.
-        delegator (str): The account receiving the payment.
-        payment_amount (float): The amount of tokens paid.
-        token_name (str): The name of the token paid.
-
-    Returns:
-        str: The transaction ID if found, None otherwise.
-    """
     try:
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching transaction ID for payment from {Fore.BLUE}{payment_account}{Style.RESET_ALL} to {Fore.BLUE}{delegator}{Style.RESET_ALL}...")
         url = f"https://history.hive-engine.com/accountHistory?account={payment_account}&limit=30&offset=0&symbol={token_name}"
@@ -36,3 +24,22 @@ def get_transaction_id(payment_account, delegator, payment_amount, token_name):
         logging.error(f"Error fetching transaction ID: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching transaction ID: {e}")
         return None
+
+def memo_exists(payment_account, memo, token_name):
+    try:
+        logging.info(f"Checking for existing memo: {memo}")
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Checking for existing memo: {memo}")
+        url = f"https://history.hive-engine.com/accountHistory?account={payment_account}&limit=100&symbol={token_name}"
+        response = requests.get(url)
+        response.raise_for_status()
+        transactions = response.json()
+        for transaction in transactions:
+            if transaction.get('memo') == memo:
+                logging.warning(f"Memo already exists in transaction history: {memo}")
+                print(f"{Fore.YELLOW}[Warning]{Style.RESET_ALL} Memo already exists in transaction history: {memo}")
+                return True
+        return False
+    except Exception as e:
+        logging.error(f"Error checking for existing memo: {e}")
+        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error checking for existing memo: {e}")
+        return False

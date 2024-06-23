@@ -10,18 +10,9 @@ init(autoreset=True)
 load_dotenv()
 
 def save_delegators_to_xlsx(df, earnings):
-    """
-    Saves the delegators list to an XLSX file.
-
-    Args:
-        df (pd.DataFrame): The DataFrame containing the delegators and their details.
-        earnings (float): The earnings for the period.
-
-    Returns:
-        None
-    """
     try:
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Preparing to save delegators list to XLSX...")
+        logging.info("Preparing to save delegators list to XLSX...")
         now = datetime.now()
         timestamp = now.strftime("pd_%m-%d-%Y_%H-%M-%S")
         filename = f"data/{timestamp}.xlsx"
@@ -44,7 +35,8 @@ def save_delegators_to_xlsx(df, earnings):
             "HIVE Deduction": total_hive_deduction,
             f"{token_name} Payment": total_token_payment,
             "TxID": "",
-            "Unique Hash": ""
+            "Unique Hash": "",
+            "Observations": ""
         }])
 
         df = pd.concat([df, total_row], ignore_index=True)
@@ -56,7 +48,8 @@ def save_delegators_to_xlsx(df, earnings):
             "HIVE Deduction": "",
             f"{token_name} Payment": "",
             "TxID": "",
-            "Unique Hash": ""
+            "Unique Hash": "",
+            "Observations": ""
         }])
 
         apr_row = pd.DataFrame([{
@@ -66,7 +59,8 @@ def save_delegators_to_xlsx(df, earnings):
             "HIVE Deduction": "",
             f"{token_name} Payment": "",
             "TxID": "",
-            "Unique Hash": ""
+            "Unique Hash": "",
+            "Observations": ""
         }])
 
         df = pd.concat([df, earnings_row, apr_row], ignore_index=True)
@@ -124,6 +118,7 @@ def save_delegators_to_xlsx(df, earnings):
                     worksheet.write_formula(i + 1, df_reordered_display.columns.get_loc("TxID"), txid)
 
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators list successfully saved in '{Fore.YELLOW}{filename}{Style.RESET_ALL}'.")
+        logging.info(f"Delegators list successfully saved in '{filename}'.")
     except Exception as e:
         logging.error(f"Error saving delegators to XLSX: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error saving delegators to XLSX: {e}")

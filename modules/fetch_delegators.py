@@ -9,15 +9,6 @@ init(autoreset=True)
 load_dotenv()
 
 def get_delegators(receiver_account):
-    """
-    Fetches the list of delegators for a given receiver account, using multiple endpoints as fallback options.
-
-    Args:
-        receiver_account (str): The name of the receiver account.
-
-    Returns:
-        list: A list of delegators with their vesting shares, or an empty list if an error occurs.
-    """
     endpoints = [
         f"https://peakd.com/api/public/delegations/incoming?delegatee={receiver_account}",
         f"https://ecency.com/private-api/received-vesting/{receiver_account}",
@@ -40,6 +31,7 @@ def get_delegators(receiver_account):
                 delegators = [item for item in delegators if item["vesting_shares"] > 0]
 
             print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators fetched successfully from {url}.")
+            logging.info(f"Delegators fetched successfully from {url}.")
             return delegators
         except Exception as e:
             logging.error(f"Error fetching delegators from {url}: {e}")
@@ -48,19 +40,15 @@ def get_delegators(receiver_account):
     return []
 
 def fetch_delegators():
-    """
-    Fetches the list of delegators for the receiver account specified in the environment variables.
-
-    Returns:
-        list: A list of delegators with their vesting shares, or an empty list if an error occurs.
-    """
     try:
         receiver_account = os.getenv("RECEIVER_ACCOUNT")
         if not receiver_account:
             raise ValueError(f"{Fore.RED}[Error]{Style.RESET_ALL} RECEIVER_ACCOUNT is not set in the environment variables.")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching delegators for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
+        logging.info(f"Fetching delegators for {receiver_account}...")
         delegators = get_delegators(receiver_account)
         print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Delegators fetched successfully.")
+        logging.info(f"Delegators fetched successfully for {receiver_account}.")
         return delegators
     except Exception as e:
         logging.error(f"Error in fetch_delegators: {e}")
