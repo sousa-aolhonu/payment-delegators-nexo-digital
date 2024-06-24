@@ -4,21 +4,6 @@ from modules.memo_utils import generate_unique_hash, format_memo, get_current_da
 import logging
 
 def process_payment_for_delegator(wallet, payment_account, token_name, delegator, payment_amount, df, index):
-    """
-    Processes a payment for a specific delegator.
-
-    Args:
-        wallet (HiveEngineWallet): The Hive Engine wallet to use for the payment.
-        payment_account (Account): The Hive account making the payment.
-        token_name (str): The name of the token to be paid.
-        delegator (str): The name of the delegator receiving the payment.
-        payment_amount (float): The amount of tokens to be paid.
-        df (pd.DataFrame): The DataFrame containing delegator information.
-        index (int): The index of the delegator in the DataFrame.
-
-    Returns:
-        bool: True if the payment was processed successfully, False otherwise.
-    """
     try:
         logging.info(f"Checking initial balance...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Checking initial balance...")

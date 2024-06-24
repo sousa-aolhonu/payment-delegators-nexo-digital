@@ -2,17 +2,6 @@ import logging
 import os
 
 def setup_logging(timestamp, log_dir='data/log', log_filename=None):
-    """
-    Sets up the logging configuration.
-
-    Args:
-        timestamp (str): The timestamp to be included in the log filename.
-        log_dir (str): The directory where the log file will be saved.
-        log_filename (str): The name of the log file.
-
-    Returns:
-        None
-    """
     if log_filename is None:
         log_filename = f'log_{timestamp}.txt'
 

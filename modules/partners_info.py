@@ -8,12 +8,6 @@ init(autoreset=True)
 load_dotenv()
 
 def get_partner_accounts():
-    """
-    Fetches the partner accounts from the environment variables.
-
-    Returns:
-        list: A list of partner accounts, or an empty list if none are set or an error occurs.
-    """
     try:
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching partner accounts...")
         partner_accounts = os.getenv("PARTNER_ACCOUNTS")
@@ -29,12 +23,6 @@ def get_partner_accounts():
         return []
 
 def get_ignore_payment_accounts():
-    """
-    Fetches the ignore payment accounts from the environment variables.
-
-    Returns:
-        list: A list of accounts to ignore for payment, or an empty list if none are set or an error occurs.
-    """
     try:
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching ignore payment accounts...")
         ignore_payment_accounts = os.getenv("IGNORE_PAYMENT_ACCOUNTS")

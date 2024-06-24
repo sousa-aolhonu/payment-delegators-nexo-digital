@@ -6,16 +6,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def send_discord_file(file_path, message):
-    """
-    Sends a file to a Discord channel.
-
-    Args:
-        file_path (str): The path to the file to send.
-        message (str): The message to include with the file.
-
-    Returns:
-        bool: True if the file was sent successfully, False otherwise.
-    """
     try:
         bot_token = os.getenv("DISCORD_BOT_TOKEN")
         channel_id = os.getenv("DISCORD_CHANNEL_ID")

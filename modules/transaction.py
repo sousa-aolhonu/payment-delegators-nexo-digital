@@ -3,18 +3,6 @@ import logging
 from colorama import Fore, Style
 
 def get_transaction_id(payment_account, delegator, payment_amount, token_name):
-    """
-    Fetches the transaction ID for a payment from the payment account to the delegator.
-
-    Args:
-        payment_account (str): The account making the payment.
-        delegator (str): The account receiving the payment.
-        payment_amount (float): The amount of tokens paid.
-        token_name (str): The name of the token paid.
-
-    Returns:
-        str: The transaction ID if found, None otherwise.
-    """
     try:
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching transaction ID for payment from {Fore.BLUE}{payment_account}{Style.RESET_ALL} to {Fore.BLUE}{delegator}{Style.RESET_ALL}...")
         url = f"https://history.hive-engine.com/accountHistory?account={payment_account}&limit=30&offset=0&symbol={token_name}"

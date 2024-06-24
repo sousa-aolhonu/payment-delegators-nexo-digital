@@ -9,15 +9,6 @@ init(autoreset=True)
 load_dotenv()
 
 def get_delegators(receiver_account):
-    """
-    Fetches the list of delegators for a given receiver account, using multiple endpoints as fallback options.
-
-    Args:
-        receiver_account (str): The name of the receiver account.
-
-    Returns:
-        list: A list of delegators with their vesting shares, or an empty list if an error occurs.
-    """
     endpoints = [
         f"https://peakd.com/api/public/delegations/incoming?delegatee={receiver_account}",
         f"https://ecency.com/private-api/received-vesting/{receiver_account}",
@@ -48,12 +39,6 @@ def get_delegators(receiver_account):
     return []
 
 def fetch_delegators():
-    """
-    Fetches the list of delegators for the receiver account specified in the environment variables.
-
-    Returns:
-        list: A list of delegators with their vesting shares, or an empty list if an error occurs.
-    """
     try:
         receiver_account = os.getenv("RECEIVER_ACCOUNT")
         if not receiver_account:

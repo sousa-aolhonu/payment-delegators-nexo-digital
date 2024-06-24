@@ -6,16 +6,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def send_telegram_file(file_path, caption):
-    """
-    Sends a file to a Telegram chat.
-
-    Args:
-        file_path (str): The path to the file to send.
-        caption (str): The caption to include with the file.
-
-    Returns:
-        bool: True if the file was sent successfully, False otherwise.
-    """
     try:
         bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
         chat_id = os.getenv("TELEGRAM_CHAT_ID")

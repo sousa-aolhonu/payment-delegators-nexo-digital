@@ -6,12 +6,6 @@ from colorama import Fore, Style
 load_dotenv()
 
 def check_env_variables():
-    """
-    Checks if all required environment variables are set.
-
-    Raises:
-        EnvironmentError: If any required environment variable is not set.
-    """
     required_vars = [
         "RECEIVER_ACCOUNT", "PAYMENT_ACCOUNT", "HIVE_ENGINE_ACTIVE_PRIVATE_KEY", 
         "HIVE_ENGINE_POSTING_PRIVATE_KEY", "TOKEN_NAME", "TOKEN_FIXED_PRICE", 

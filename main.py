@@ -20,18 +20,6 @@ from modules.config import check_env_variables
 init(autoreset=True)
 
 def get_own_hp(receiver_account):
-    """
-    Fetches the own HP (Hive Power) for the receiver account.
-
-    Args:
-        receiver_account (str): The name of the receiver account.
-
-    Returns:
-        float: The own HP of the receiver account.
-
-    Raises:
-        Exception: If there is an error fetching the account information.
-    """
     try:
         logging.debug(f"Starting to fetch own HP for {receiver_account}.")
         own_hp = get_account_info(receiver_account)
@@ -42,18 +30,6 @@ def get_own_hp(receiver_account):
         raise
 
 def fetch_delegators_info(receiver_account):
-    """
-    Fetches the delegators list, partner accounts, and ignore payment accounts for the receiver account.
-
-    Args:
-        receiver_account (str): The name of the receiver account.
-
-    Returns:
-        tuple: A tuple containing the delegators list, partner accounts, and ignore payment accounts.
-
-    Raises:
-        Exception: If there is an error fetching the delegators info.
-    """
     try:
         logging.info(f"Fetching delegators info for {receiver_account}...")
         
@@ -73,19 +49,6 @@ def fetch_delegators_info(receiver_account):
         raise
 
 def calculate_earnings(own_hp, receiver_account):
-    """
-    Calculates the earnings for the period.
-
-    Args:
-        own_hp (float): The own HP of the receiver account.
-        receiver_account (str): The name of the receiver account.
-
-    Returns:
-        float: The earnings for the period.
-
-    Raises:
-        Exception: If there is an error calculating the earnings.
-    """
     try:
         logging.info(f"Calculating earnings for {receiver_account}...")
         
@@ -104,19 +67,6 @@ def calculate_earnings(own_hp, receiver_account):
         raise
 
 def process_delegators(delegators_list, partner_accounts):
-    """
-    Processes the delegators list to calculate delegated HP for each delegator.
-
-    Args:
-        delegators_list (list): The list of delegators.
-        partner_accounts (list): The list of partner accounts.
-
-    Returns:
-        tuple: A tuple containing the processed delegators list and the total HP of partner accounts.
-
-    Raises:
-        Exception: If there is an error processing the delegators.
-    """
     try:
         logging.info("Processing delegators list...")
         partner_hp = 0
@@ -144,21 +94,6 @@ def process_delegators(delegators_list, partner_accounts):
         raise
 
 def insert_accounts_into_df(delegators, receiver_account, receiver_hp, partner_hp):
-    """
-    Inserts the receiver account and partner accounts into the DataFrame.
-
-    Args:
-        delegators (list): The list of delegators.
-        receiver_account (str): The name of the receiver account.
-        receiver_hp (float): The own HP of the receiver account.
-        partner_hp (float): The total HP of the partner accounts.
-
-    Returns:
-        list: The updated list of delegators with the receiver and partner accounts inserted.
-
-    Raises:
-        Exception: If there is an error inserting the accounts into the DataFrame.
-    """
     try:
         logging.info("Inserting accounts into DataFrame...")
         delegators.insert(0, {"Account": receiver_account, "Delegated HP": receiver_hp})
@@ -171,13 +106,6 @@ def insert_accounts_into_df(delegators, receiver_account, receiver_hp, partner_h
         raise
 
 def main():
-    """
-    Main function to execute the program.
-
-    Checks environment variables, fetches account information, calculates earnings,
-    processes delegators, calculates additional columns, processes payments,
-    and saves the delegators list to an XLSX file.
-    """
     try:
         now = datetime.now()
         timestamp = now.strftime("pd_%m-%d-%Y_%H-%M-%S")

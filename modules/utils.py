@@ -6,16 +6,6 @@ from colorama import Fore, Style, init
 init(autoreset=True)
 
 def get_latest_file(directory, prefix):
-    """
-    Gets the latest file in a directory with the specified prefix.
-
-    Args:
-        directory (str): The directory to search for files.
-        prefix (str): The prefix of the files to search for.
-
-    Returns:
-        str: The path to the latest file, or None if no files are found or an error occurs.
-    """
     try:
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Getting the latest file in directory {Fore.BLUE}{directory}{Style.RESET_ALL} with prefix {Fore.BLUE}{prefix}{Style.RESET_ALL}...")
         files = [f for f in os.listdir(directory) if f.startswith(prefix)]
@@ -32,16 +22,6 @@ def get_latest_file(directory, prefix):
         return None
 
 def get_previous_own_hp(latest_file, receiver_account):
-    """
-    Gets the previous own HP (Hive Power) from the latest file for the specified receiver account.
-
-    Args:
-        latest_file (str): The path to the latest file.
-        receiver_account (str): The name of the receiver account.
-
-    Returns:
-        float: The previous own HP, or 0 if an error occurs.
-    """
     try:
         if latest_file:
             print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Reading latest file {Fore.BLUE}{latest_file}{Style.RESET_ALL} to get previous own HP for {Fore.BLUE}{receiver_account}{Style.RESET_ALL}...")
