@@ -16,6 +16,12 @@ init(autoreset=True)
 load_dotenv()
 
 def configure_hive():
+    """
+    Configures the Hive blockchain connection.
+
+    Returns:
+        tuple: A tuple containing the Hive instance and the payment account, or (None, None) if an error occurs.
+    """
     try:
         logging.info("Configuring Hive...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Configuring Hive...")
@@ -30,6 +36,16 @@ def configure_hive():
         return None, None
 
 def configure_hive_engine_wallet(account, stm):
+    """
+    Configures the Hive Engine wallet for the specified account.
+
+    Args:
+        account (Account): The Hive account.
+        stm (Hive): The Hive blockchain instance.
+
+    Returns:
+        HiveEngineWallet: The configured Hive Engine wallet, or None if an error occurs.
+    """
     try:
         logging.info("Configuring Hive Engine Wallet...")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Configuring Hive Engine Wallet...")
@@ -43,10 +59,21 @@ def configure_hive_engine_wallet(account, stm):
         return None
 
 def memo_exists(payment_account, memo, token_name):
+    """
+    Checks if a memo already exists in the blockchain history.
+
+    Args:
+        payment_account (str): The payment account.
+        memo (str): The memo to check for.
+        token_name (str): The token name.
+
+    Returns:
+        bool: True if the memo exists, False otherwise.
+    """
     try:
         logging.info(f"Checking for existing memo: {memo}")
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Checking for existing memo: {memo}")
-        url = f"https://history.hive-engine.com/accountHistory?account={payment_account}&limit=100&symbol={token_name}"
+        url = f"https://history.hive-engine.com/accountHistory?account={payment_account}&limit=30&offset=0&symbol={token_name}"
         response = requests.get(url)
         response.raise_for_status()
         transactions = response.json()
@@ -62,6 +89,12 @@ def memo_exists(payment_account, memo, token_name):
         return False
 
 def process_payments(df):
+    """
+    Processes the payments for the delegators listed in the DataFrame.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the delegators and payment information.
+    """
     try:
         payments_enabled = os.getenv("ACTIVATE_PAYMENTS", "False") == "True"
         if not payments_enabled:

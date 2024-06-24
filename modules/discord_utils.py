@@ -2,18 +2,26 @@ import os
 import logging
 import requests
 from dotenv import load_dotenv
-from colorama import Fore, Style
 
 load_dotenv()
 
 def send_discord_file(file_path, message):
+    """
+    Sends a file to a Discord channel.
+
+    Args:
+        file_path (str): The path to the file to send.
+        message (str): The message to include with the file.
+
+    Returns:
+        bool: True if the file was sent successfully, False otherwise.
+    """
     try:
         bot_token = os.getenv("DISCORD_BOT_TOKEN")
         channel_id = os.getenv("DISCORD_CHANNEL_ID")
         
         if not bot_token or not channel_id:
             logging.error("Discord bot token or channel ID not set in environment variables.")
-            print(f"{Fore.RED}[Error]{Style.RESET_ALL} Discord bot token or channel ID not set in environment variables.")
             return False
 
         url = f"https://discord.com/api/v9/channels/{channel_id}/messages"
@@ -31,13 +39,10 @@ def send_discord_file(file_path, message):
         
         if response.status_code == 200:
             logging.info("Spreadsheet file sent successfully to Discord.")
-            print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Spreadsheet file sent successfully to Discord.")
             return True
         else:
             logging.error(f"Failed to send spreadsheet file to Discord: {response.status_code} {response.text}")
-            print(f"{Fore.RED}[Error]{Style.RESET_ALL} Failed to send spreadsheet file to Discord: {response.status_code} {response.text}")
             return False
     except Exception as e:
         logging.error(f"Error sending spreadsheet file to Discord: {e}")
-        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error sending spreadsheet file to Discord: {e}")
         return False

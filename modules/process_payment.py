@@ -3,19 +3,33 @@ from modules.wallet_utils import check_balance, wait_for_transaction, wait_for_t
 from modules.memo_utils import generate_unique_hash, format_memo, get_current_date
 import logging
 
-def process_payment_for_delegator(wallet, payment_account, token_name, delegator, payment_amount, df, index, original_date=None):
+def process_payment_for_delegator(wallet, payment_account, token_name, delegator, payment_amount, df, index):
+    """
+    Processes a payment for a specific delegator.
+
+    Args:
+        wallet (HiveEngineWallet): The Hive Engine wallet to use for the payment.
+        payment_account (Account): The Hive account making the payment.
+        token_name (str): The name of the token to be paid.
+        delegator (str): The name of the delegator receiving the payment.
+        payment_amount (float): The amount of tokens to be paid.
+        df (pd.DataFrame): The DataFrame containing delegator information.
+        index (int): The index of the delegator in the DataFrame.
+
+    Returns:
+        bool: True if the payment was processed successfully, False otherwise.
+    """
     try:
-        logging.info(f"Checking initial balance for payment to {delegator}...")
-        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Checking initial balance for payment to {Fore.BLUE}{delegator}{Style.RESET_ALL}...")
+        logging.info(f"Checking initial balance...")
+        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Checking initial balance...")
         initial_balance = check_balance(wallet)
         logging.info(f"Initial balance: {initial_balance}")
-        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Initial balance: {Fore.YELLOW}{initial_balance}{Style.RESET_ALL}")
+        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Initial balance: {Fore.YELLOW}{initial_balance}")
 
         if payment_amount <= initial_balance:
-            if not original_date:
-                original_date = get_current_date()
-            unique_hash = generate_unique_hash(delegator, payment_amount, original_date)
-            memo = format_memo(delegator, payment_amount, original_date, unique_hash)
+            current_date = get_current_date()
+            unique_hash = generate_unique_hash(delegator, payment_amount, current_date)
+            memo = format_memo(delegator, payment_amount, current_date, unique_hash)
             logging.info(f"Initiating reward of {payment_amount} {token_name} to {delegator} with memo: {memo}")
             print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Initiating reward of {Fore.YELLOW}{payment_amount} {token_name}{Style.RESET_ALL} to {Fore.BLUE}{delegator}{Style.RESET_ALL} with memo: {memo}...")
             
@@ -28,7 +42,7 @@ def process_payment_for_delegator(wallet, payment_account, token_name, delegator
             final_balance = wait_for_transaction(wallet, initial_balance, payment_amount)
             if final_balance is not None:
                 logging.info(f"Transaction reflected in the blockchain. Final balance: {final_balance}")
-                print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Transaction reflected in the blockchain. Final balance: {Fore.YELLOW}{final_balance}{Style.RESET_ALL}")
+                print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Transaction reflected in the blockchain. Final balance: {Fore.YELLOW}{final_balance}")
 
                 logging.info(f"Fetching transaction ID...")
                 print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Fetching transaction ID...")
@@ -36,13 +50,8 @@ def process_payment_for_delegator(wallet, payment_account, token_name, delegator
                 if txid:
                     df.at[index, "TxID"] = txid
                     df.at[index, "Unique Hash"] = unique_hash
-                    if original_date != get_current_date():
-                        observation = f"Delayed reward paid. Original date: {original_date}. TxID: {txid}"
-                        df.at[index, "Observations"] = observation
-                        logging.info(f"Observation for {delegator}: {observation}")
-                        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Observation for {Fore.BLUE}{delegator}{Style.RESET_ALL}: {Fore.YELLOW}{observation}{Style.RESET_ALL}")
                     logging.info(f"Transaction ID for {delegator}: {txid}")
-                    print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Transaction ID for {Fore.BLUE}{delegator}{Style.RESET_ALL}: {Fore.YELLOW}{txid}{Style.RESET_ALL}")
+                    print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Transaction ID for {Fore.BLUE}{delegator}{Style.RESET_ALL}: {Fore.YELLOW}{txid}")
                 else:
                     df.at[index, "TxID"] = "Not found"
                 return True

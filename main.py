@@ -16,13 +16,22 @@ from modules.logger import setup_logging
 from modules.telegram_utils import send_telegram_file
 from modules.discord_utils import send_discord_file
 from modules.config import check_env_variables
-from modules.wallet_utils import configure_hive, configure_hive_engine_wallet
-from modules.memo_utils import format_memo, memo_exists
-from modules.process_payment import process_payment_for_delegator
 
 init(autoreset=True)
 
 def get_own_hp(receiver_account):
+    """
+    Fetches the own HP (Hive Power) for the receiver account.
+
+    Args:
+        receiver_account (str): The name of the receiver account.
+
+    Returns:
+        float: The own HP of the receiver account.
+
+    Raises:
+        Exception: If there is an error fetching the account information.
+    """
     try:
         logging.debug(f"Starting to fetch own HP for {receiver_account}.")
         own_hp = get_account_info(receiver_account)
@@ -33,6 +42,18 @@ def get_own_hp(receiver_account):
         raise
 
 def fetch_delegators_info(receiver_account):
+    """
+    Fetches the delegators list, partner accounts, and ignore payment accounts for the receiver account.
+
+    Args:
+        receiver_account (str): The name of the receiver account.
+
+    Returns:
+        tuple: A tuple containing the delegators list, partner accounts, and ignore payment accounts.
+
+    Raises:
+        Exception: If there is an error fetching the delegators info.
+    """
     try:
         logging.info(f"Fetching delegators info for {receiver_account}...")
         
@@ -52,6 +73,19 @@ def fetch_delegators_info(receiver_account):
         raise
 
 def calculate_earnings(own_hp, receiver_account):
+    """
+    Calculates the earnings for the period.
+
+    Args:
+        own_hp (float): The own HP of the receiver account.
+        receiver_account (str): The name of the receiver account.
+
+    Returns:
+        float: The earnings for the period.
+
+    Raises:
+        Exception: If there is an error calculating the earnings.
+    """
     try:
         logging.info(f"Calculating earnings for {receiver_account}...")
         
@@ -70,6 +104,19 @@ def calculate_earnings(own_hp, receiver_account):
         raise
 
 def process_delegators(delegators_list, partner_accounts):
+    """
+    Processes the delegators list to calculate delegated HP for each delegator.
+
+    Args:
+        delegators_list (list): The list of delegators.
+        partner_accounts (list): The list of partner accounts.
+
+    Returns:
+        tuple: A tuple containing the processed delegators list and the total HP of partner accounts.
+
+    Raises:
+        Exception: If there is an error processing the delegators.
+    """
     try:
         logging.info("Processing delegators list...")
         partner_hp = 0
@@ -97,6 +144,21 @@ def process_delegators(delegators_list, partner_accounts):
         raise
 
 def insert_accounts_into_df(delegators, receiver_account, receiver_hp, partner_hp):
+    """
+    Inserts the receiver account and partner accounts into the DataFrame.
+
+    Args:
+        delegators (list): The list of delegators.
+        receiver_account (str): The name of the receiver account.
+        receiver_hp (float): The own HP of the receiver account.
+        partner_hp (float): The total HP of the partner accounts.
+
+    Returns:
+        list: The updated list of delegators with the receiver and partner accounts inserted.
+
+    Raises:
+        Exception: If there is an error inserting the accounts into the DataFrame.
+    """
     try:
         logging.info("Inserting accounts into DataFrame...")
         delegators.insert(0, {"Account": receiver_account, "Delegated HP": receiver_hp})
@@ -108,70 +170,14 @@ def insert_accounts_into_df(delegators, receiver_account, receiver_hp, partner_h
         logging.error(f"Error inserting accounts into DataFrame: {e}")
         raise
 
-def process_failed_payments():
-    try:
-        logging.info("Processing failed payments from the previous run.")
-        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Processing failed payments from the previous run.")
-
-        latest_file = get_latest_file('data', 'pd_')
-        if latest_file:
-            logging.info(f"Latest file found: {latest_file}")
-            print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Latest file found: {Fore.BLUE}{latest_file}{Style.RESET_ALL}")
-            df = pd.read_excel(latest_file)
-
-            failed_payments = df[df['TxID'] == 'Error']
-            if not failed_payments.empty:
-                logging.info(f"Found {len(failed_payments)} failed payments. Reprocessing...")
-                print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Found {Fore.YELLOW}{len(failed_payments)}{Style.RESET_ALL} failed payments. Reprocessing...")
-                
-                stm, payment_account = configure_hive()
-                if not stm or not payment_account:
-                    raise Exception("Failed to configure Hive")
-
-                wallet = configure_hive_engine_wallet(payment_account, stm)
-                if not wallet:
-                    raise Exception("Failed to configure Hive Engine Wallet")
-
-                token_name = os.getenv('TOKEN_NAME', 'NEXO')
-
-                for index, row in failed_payments.iterrows():
-                    try:
-                        delegator = row["Account"]
-                        payment_amount = float(row[f"{token_name} Payment"])
-                        unique_hash = row["Unique Hash"]
-                        memo = format_memo(delegator, payment_amount, row["Date"], unique_hash)
-                        
-                        if memo_exists(payment_account.name, memo, token_name):
-                            logging.warning(f"Payment for {delegator} already processed. Skipping...")
-                            print(f"{Fore.YELLOW}[Warning]{Style.RESET_ALL} Payment for {Fore.BLUE}{delegator}{Style.RESET_ALL} already processed. Skipping...")
-                            continue
-
-                        logging.info(f"Processing payment for {delegator}...")
-                        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Processing payment for {Fore.BLUE}{delegator}{Style.RESET_ALL}...")
-                        if process_payment_for_delegator(wallet, payment_account, token_name, delegator, payment_amount, df, index):
-                            logging.info(f"Payment for {delegator} processed successfully.")
-                            print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Payment for {Fore.BLUE}{delegator}{Style.RESET_ALL} processed successfully.")
-                        else:
-                            logging.error(f"Payment for {delegator} failed.")
-                            print(f"{Fore.RED}[Error]{Style.RESET_ALL} Payment for {Fore.BLUE}{delegator}{Style.RESET_ALL} failed.")
-                    except Exception as e:
-                        logging.error(f"Error processing payment for {delegator}: {e}")
-                        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error processing payment for {Fore.BLUE}{delegator}{Style.RESET_ALL}: {e}")
-
-                df.to_excel(latest_file, index=False)
-                logging.info(f"Reprocessed failed payments and updated the file: {latest_file}")
-                print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Reprocessed failed payments and updated the file: {Fore.BLUE}{latest_file}{Style.RESET_ALL}")
-            else:
-                logging.info("No failed payments found in the previous file.")
-                print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} No failed payments found in the previous file.")
-        else:
-            logging.info("No previous file found.")
-            print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} No previous file found.")
-    except Exception as e:
-        logging.error(f"Error processing failed payments: {e}")
-        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error processing failed payments: {e}")
-
 def main():
+    """
+    Main function to execute the program.
+
+    Checks environment variables, fetches account information, calculates earnings,
+    processes delegators, calculates additional columns, processes payments,
+    and saves the delegators list to an XLSX file.
+    """
     try:
         now = datetime.now()
         timestamp = now.strftime("pd_%m-%d-%Y_%H-%M-%S")
@@ -183,9 +189,6 @@ def main():
         check_env_variables()
 
         receiver_account = os.getenv("RECEIVER_ACCOUNT")
-        
-        process_failed_payments()
-
         own_hp = round(get_own_hp(receiver_account), 3)
 
         earnings = calculate_earnings(own_hp, receiver_account)
@@ -221,40 +224,28 @@ def main():
         else:
             print(tabulate(df_display, headers='keys', tablefmt='psql'))
             logging.info("Payments are deactivated. Only spreadsheets will be generated.")
-            print(f"{Fore.YELLOW}[Warning]{Style.RESET_ALL} Payments are deactivated. Only spreadsheets will be generated.")
 
         logging.info("Saving delegators list to XLSX...")
-        print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} Saving delegators list to XLSX...")
         save_delegators_to_xlsx(df, earnings)
 
         logging.info("All tasks completed successfully.")
-        print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} All tasks completed successfully.")
 
     except Exception as e:
         logging.error(f"Error in main execution: {e}")
-        print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error in main execution: {e}")
     finally:
-        log_file_path = os.path.join('data', 'log', f"log_{timestamp}.txt")
-        if os.path.exists(log_file_path):
-            telegram_success = send_telegram_file(log_file_path, "Log file for the latest execution")
-            if telegram_success:
-                logging.info("Log file sent successfully to Telegram.")
-                print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Log file sent successfully to Telegram.")
-            else:
-                logging.error("Failed to send log file to Telegram.")
-                print(f"{Fore.RED}[Error]{Style.RESET_ALL} Failed to send log file to Telegram.")
+        log_file_path = f"data/log/log_{timestamp}.txt"
+        telegram_success = send_telegram_file(log_file_path, "Log file for the latest execution")
+        if telegram_success:
+            logging.info("Log file sent successfully to Telegram.")
         else:
-            logging.error(f"Log file does not exist: {log_file_path}")
-            print(f"{Fore.RED}[Error]{Style.RESET_ALL} Log file does not exist: {log_file_path}")
+            logging.error("Failed to send log file to Telegram.")
 
         latest_xlsx_file = get_latest_file('data', 'pd_')
         discord_success = send_discord_file(latest_xlsx_file, "Spreadsheet for the latest execution")
         if discord_success:
             logging.info("Spreadsheet file sent successfully to Discord.")
-            print(f"{Fore.GREEN}[Success]{Style.RESET_ALL} Spreadsheet file sent successfully to Discord.")
         else:
             logging.error("Failed to send spreadsheet file to Discord.")
-            print(f"{Fore.RED}[Error]{Style.RESET_ALL} Failed to send spreadsheet file to Discord.")
 
 if __name__ == "__main__":
     main()
