@@ -117,14 +117,45 @@ def insert_accounts_into_df(delegators, receiver_account, receiver_hp, partner_h
         logging.error(f"Error inserting accounts into DataFrame: {e}")
         raise
 
+def generate_status_message(df, execution_status, error_message=None):
+    if execution_status == "error":
+        return f"[Error] Execution failed: {error_message}"
+    
+    successful_payments = df[df["TxID"] != ""]
+    failed_payments = df[df["TxID"] == "Failed"]
+    no_payments_due_to_balance = df[df["TxID"] == "Insufficient balance"]
+    no_payments_due_to_no_delegators = df[df["TxID"] == "No delegators"]
+
+    message = "[Status] Execution completed:\n"
+
+    if not successful_payments.empty:
+        message += f"Successful payments: {len(successful_payments)}\n"
+    
+    if not failed_payments.empty:
+        message += f"Failed payments: {len(failed_payments)}\n"
+        message += "Details:\n"
+        for _, row in failed_payments.iterrows():
+            message += f"  - {row['Account']}: {row['Delegated HP']} HP, {row['TxID']}\n"
+    
+    if not no_payments_due_to_balance.empty:
+        message += "No payments due to insufficient balance.\n"
+    
+    if not no_payments_due_to_no_delegators.empty:
+        message += "No payments due to no delegators.\n"
+    
+    if successful_payments.empty and failed_payments.empty and no_payments_due_to_balance.empty and no_payments_due_to_no_delegators.empty:
+        message += "No payments were made in this cycle.\n"
+
+    return message
+
 def main():
-    try:
-        load_dotenv()
+    load_dotenv()
 
-        auto_run = os.getenv("AUTO_RUN", "False") == "True"
-        run_time = os.getenv("RUN_TIME", "23:00")
+    auto_run = os.getenv("AUTO_RUN", "False") == "True"
+    run_time = os.getenv("RUN_TIME", "23:00")
 
-        while True:
+    while True:
+        try:
             now = datetime.now()
             timestamp = now.strftime("pd_%m-%d-%Y_%H-%M-%S")
 
@@ -172,13 +203,21 @@ def main():
             save_delegators_to_xlsx(df, earnings)
 
             logging.info("All tasks completed successfully.")
+            execution_status = "success"
 
+        except Exception as e:
+            logging.error(f"Error in main execution: {e}")
+            execution_status = "error"
+            error_message = str(e)
+        
+        finally:
             log_file_path = f"data/log/log_{timestamp}.txt"
-            telegram_success = send_telegram_file(log_file_path, "Log file for the latest execution")
+            status_message = generate_status_message(df, execution_status, error_message if execution_status == "error" else None)
+            telegram_success = send_telegram_file(log_file_path, status_message)
             if telegram_success:
-                logging.info("Log file sent successfully to Telegram.")
+                logging.info("Log file and status message sent successfully to Telegram.")
             else:
-                logging.error("Failed to send log file to Telegram.")
+                logging.error("Failed to send log file and status message to Telegram.")
 
             latest_xlsx_file = get_latest_file('data', 'pd_')
             discord_success = send_discord_file(latest_xlsx_file, "Spreadsheet for the latest execution")
@@ -187,15 +226,12 @@ def main():
             else:
                 logging.error("Failed to send spreadsheet file to Discord.")
 
-            if auto_run:
-                wait_time = get_seconds_until_next_run(run_time)
-                logging.info(f"Waiting for {wait_time} seconds until next execution at {run_time}...")
-                time.sleep(wait_time)
-            else:
-                break
-
-    except Exception as e:
-        logging.error(f"Error in main execution: {e}")
+        if auto_run:
+            wait_time = get_seconds_until_next_run(run_time)
+            logging.info(f"Waiting for {wait_time} seconds until next execution at {run_time}...")
+            time.sleep(wait_time)
+        else:
+            break
 
 if __name__ == "__main__":
     main()
