@@ -20,9 +20,10 @@ from modules.config import check_env_variables
 
 init(autoreset=True)
 
+
 def get_seconds_until_next_run(run_time):
     now = datetime.now()
-    run_hour, run_minute = map(int, run_time.split(':'))
+    run_hour, run_minute = map(int, run_time.split(":"))
     next_run = now.replace(hour=run_hour, minute=run_minute, second=0, microsecond=0)
 
     if now >= next_run:
@@ -30,6 +31,7 @@ def get_seconds_until_next_run(run_time):
 
     wait_time = (next_run - now).total_seconds()
     return wait_time
+
 
 def get_own_hp(receiver_account):
     try:
@@ -41,10 +43,11 @@ def get_own_hp(receiver_account):
         logging.error(f"Error fetching own HP for {receiver_account}: {e}")
         raise
 
+
 def fetch_delegators_info(receiver_account):
     try:
         logging.info(f"Fetching delegators info for {receiver_account}...")
-        
+
         delegators_list = fetch_delegators()
         logging.debug(f"Delegators list: {delegators_list}")
 
@@ -60,11 +63,12 @@ def fetch_delegators_info(receiver_account):
         logging.error(f"Error fetching delegators info for {receiver_account}: {e}")
         raise
 
+
 def calculate_earnings(own_hp, receiver_account):
     try:
         logging.info(f"Calculating earnings for {receiver_account}...")
-        
-        latest_file = get_latest_file('data', 'pd_')
+
+        latest_file = get_latest_file("data", "pd_")
         logging.debug(f"Latest file found: {latest_file}")
 
         previous_own_hp = round(get_previous_own_hp(latest_file, receiver_account), 3)
@@ -78,6 +82,7 @@ def calculate_earnings(own_hp, receiver_account):
         logging.error(f"Error calculating earnings for {receiver_account}: {e}")
         raise
 
+
 def process_delegators(delegators_list, partner_accounts):
     try:
         logging.info("Processing delegators list...")
@@ -85,16 +90,15 @@ def process_delegators(delegators_list, partner_accounts):
         delegators = []
         for item in delegators_list:
             try:
-                delegator = item['delegator']
-                vesting_shares = float(item['vesting_shares'])
+                delegator = item["delegator"]
+                vesting_shares = float(item["vesting_shares"])
                 delegated_hp = round(vests_to_hp(vesting_shares, delegator), 3)
                 if delegator in partner_accounts:
                     partner_hp += delegated_hp
                 else:
-                    delegators.append({
-                        "Account": delegator,
-                        "Delegated HP": delegated_hp
-                    })
+                    delegators.append(
+                        {"Account": delegator, "Delegated HP": delegated_hp}
+                    )
                 logging.debug(f"Processed delegator {delegator}: {delegated_hp} HP")
             except Exception as e:
                 logging.error(f"Error processing delegator {item}: {e}")
@@ -105,22 +109,28 @@ def process_delegators(delegators_list, partner_accounts):
         logging.error(f"Error processing delegators: {e}")
         raise
 
+
 def insert_accounts_into_df(delegators, receiver_account, receiver_hp, partner_hp):
     try:
         logging.info("Inserting accounts into DataFrame...")
         delegators.insert(0, {"Account": receiver_account, "Delegated HP": receiver_hp})
-        delegators.insert(1, {"Account": "Partner Accounts", "Delegated HP": partner_hp})
-        logging.debug(f"Receiver account and partner accounts inserted: {delegators[:2]}")
+        delegators.insert(
+            1, {"Account": "Partner Accounts", "Delegated HP": partner_hp}
+        )
+        logging.debug(
+            f"Receiver account and partner accounts inserted: {delegators[:2]}"
+        )
         logging.info("Accounts inserted into DataFrame successfully.")
         return delegators
     except Exception as e:
         logging.error(f"Error inserting accounts into DataFrame: {e}")
         raise
 
+
 def generate_status_message(df, execution_status, error_message=None):
     if execution_status == "error":
         return f"[Error] Execution failed: {error_message}"
-    
+
     successful_payments = df[df["TxID"] != ""]
     failed_payments = df[df["TxID"] == "Failed"]
     no_payments_due_to_balance = df[df["TxID"] == "Insufficient balance"]
@@ -130,23 +140,31 @@ def generate_status_message(df, execution_status, error_message=None):
 
     if not successful_payments.empty:
         message += f"Successful payments: {len(successful_payments)}\n"
-    
+
     if not failed_payments.empty:
         message += f"Failed payments: {len(failed_payments)}\n"
         message += "Details:\n"
         for _, row in failed_payments.iterrows():
-            message += f"  - {row['Account']}: {row['Delegated HP']} HP, {row['TxID']}\n"
-    
+            message += (
+                f"  - {row['Account']}: {row['Delegated HP']} HP, {row['TxID']}\n"
+            )
+
     if not no_payments_due_to_balance.empty:
         message += "No payments due to insufficient balance.\n"
-    
+
     if not no_payments_due_to_no_delegators.empty:
         message += "No payments due to no delegators.\n"
-    
-    if successful_payments.empty and failed_payments.empty and no_payments_due_to_balance.empty and no_payments_due_to_no_delegators.empty:
+
+    if (
+        successful_payments.empty
+        and failed_payments.empty
+        and no_payments_due_to_balance.empty
+        and no_payments_due_to_no_delegators.empty
+    ):
         message += "No payments were made in this cycle.\n"
 
     return message
+
 
 def main():
     load_dotenv()
@@ -167,11 +185,17 @@ def main():
 
             earnings = calculate_earnings(own_hp, receiver_account)
 
-            delegators_list, partner_accounts, ignore_payment_accounts = fetch_delegators_info(receiver_account)
+            delegators_list, partner_accounts, ignore_payment_accounts = (
+                fetch_delegators_info(receiver_account)
+            )
 
-            delegators, partner_hp = process_delegators(delegators_list, partner_accounts)
+            delegators, partner_hp = process_delegators(
+                delegators_list, partner_accounts
+            )
 
-            delegators = insert_accounts_into_df(delegators, receiver_account, own_hp, partner_hp)
+            delegators = insert_accounts_into_df(
+                delegators, receiver_account, own_hp, partner_hp
+            )
 
             logging.info("Calculating additional columns...")
             df = calculate_additional_columns(delegators, earnings)
@@ -181,14 +205,28 @@ def main():
             logging.info("DataFrame before rewards:")
             df_display = df.copy()
             df_display["Delegated HP"] = df_display.apply(
-                lambda x: f"{x['Delegated HP']} HP" if x["Account"] != "APR" else x["Delegated HP"],
-                axis=1
+                lambda x: (
+                    f"{x['Delegated HP']} HP"
+                    if x["Account"] != "APR"
+                    else x["Delegated HP"]
+                ),
+                axis=1,
             )
-            df_display["HIVE Deduction"] = df_display["HIVE Deduction"].apply(lambda x: f"{x} HIVE" if x != "" else x)
+            df_display["HIVE Deduction"] = df_display["HIVE Deduction"].apply(
+                lambda x: f"{x} HIVE" if x != "" else x
+            )
             token_name = os.getenv("TOKEN_NAME", "NEXO")
-            df_display[f"{token_name} Payment"] = df_display[f"{token_name} Payment"].apply(lambda x: f"{x} {token_name}" if x != "" else x)
-            df_display["Percentage"] = df_display["Percentage"].apply(lambda x: f"{x}%" if pd.notnull(x) and x != "" and not str(x).endswith('%') else x)
-            print(tabulate(df_display, headers='keys', tablefmt='psql'))
+            df_display[f"{token_name} Payment"] = df_display[
+                f"{token_name} Payment"
+            ].apply(lambda x: f"{x} {token_name}" if x != "" else x)
+            df_display["Percentage"] = df_display["Percentage"].apply(
+                lambda x: (
+                    f"{x}%"
+                    if pd.notnull(x) and x != "" and not str(x).endswith("%")
+                    else x
+                )
+            )
+            print(tabulate(df_display, headers="keys", tablefmt="psql"))
             logging.debug(f"\n{tabulate(df_display, headers='keys', tablefmt='psql')}")
 
             logging.info("Processing rewards...")
@@ -196,8 +234,10 @@ def main():
             if payments_enabled:
                 process_payments(df)
             else:
-                print(tabulate(df_display, headers='keys', tablefmt='psql'))
-                logging.info("Payments are deactivated. Only spreadsheets will be generated.")
+                print(tabulate(df_display, headers="keys", tablefmt="psql"))
+                logging.info(
+                    "Payments are deactivated. Only spreadsheets will be generated."
+                )
 
             logging.info("Saving delegators list to XLSX...")
             save_delegators_to_xlsx(df, earnings)
@@ -209,18 +249,26 @@ def main():
             logging.error(f"Error in main execution: {e}")
             execution_status = "error"
             error_message = str(e)
-        
+
         finally:
             log_file_path = f"data/log/log_{timestamp}.txt"
-            status_message = generate_status_message(df, execution_status, error_message if execution_status == "error" else None)
+            status_message = generate_status_message(
+                df,
+                execution_status,
+                error_message if execution_status == "error" else None,
+            )
             telegram_success = send_telegram_file(log_file_path, status_message)
             if telegram_success:
-                logging.info("Log file and status message sent successfully to Telegram.")
+                logging.info(
+                    "Log file and status message sent successfully to Telegram."
+                )
             else:
                 logging.error("Failed to send log file and status message to Telegram.")
 
-            latest_xlsx_file = get_latest_file('data', 'pd_')
-            discord_success = send_discord_file(latest_xlsx_file, "Spreadsheet for the latest execution")
+            latest_xlsx_file = get_latest_file("data", "pd_")
+            discord_success = send_discord_file(
+                latest_xlsx_file, "Spreadsheet for the latest execution"
+            )
             if discord_success:
                 logging.info("Spreadsheet file sent successfully to Discord.")
             else:
@@ -228,10 +276,13 @@ def main():
 
         if auto_run:
             wait_time = get_seconds_until_next_run(run_time)
-            logging.info(f"Waiting for {wait_time} seconds until next execution at {run_time}...")
+            logging.info(
+                f"Waiting for {wait_time} seconds until next execution at {run_time}..."
+            )
             time.sleep(wait_time)
         else:
             break
+
 
 if __name__ == "__main__":
     main()
