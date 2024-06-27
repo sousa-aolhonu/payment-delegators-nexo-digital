@@ -30,7 +30,7 @@ def get_seconds_until_next_run(run_time):
         next_run += timedelta(days=1)
 
     wait_time = (next_run - now).total_seconds()
-    return wait_time
+    return wait_time, next_run.strftime("%Y-%m-%d %H:%M")
 
 
 def get_own_hp(receiver_account):
@@ -172,6 +172,11 @@ def main():
     auto_run = os.getenv("AUTO_RUN", "False") == "True"
     run_time = os.getenv("RUN_TIME", "23:00")
 
+    if auto_run:
+        wait_time, next_run_time = get_seconds_until_next_run(run_time)
+        print(f"Waiting until next execution at {next_run_time}...")
+        time.sleep(wait_time)
+
     while True:
         try:
             now = datetime.now()
@@ -251,20 +256,6 @@ def main():
             error_message = str(e)
 
         finally:
-            log_file_path = f"data/log/log_{timestamp}.txt"
-            status_message = generate_status_message(
-                df,
-                execution_status,
-                error_message if execution_status == "error" else None,
-            )
-            telegram_success = send_telegram_file(log_file_path, status_message)
-            if telegram_success:
-                logging.info(
-                    "Log file and status message sent successfully to Telegram."
-                )
-            else:
-                logging.error("Failed to send log file and status message to Telegram.")
-
             latest_xlsx_file = get_latest_file("data", "pd_")
             discord_success = send_discord_file(
                 latest_xlsx_file, "Spreadsheet for the latest execution"
@@ -274,11 +265,28 @@ def main():
             else:
                 logging.error("Failed to send spreadsheet file to Discord.")
 
-        if auto_run:
-            wait_time = get_seconds_until_next_run(run_time)
-            logging.info(
-                f"Waiting for {wait_time} seconds until next execution at {run_time}..."
+            log_file_path = f"data/log/log_{timestamp}.txt"
+            status_message = generate_status_message(
+                df,
+                execution_status,
+                error_message if execution_status == "error" else None,
             )
+            if os.path.exists(log_file_path):
+                telegram_success = send_telegram_file(log_file_path, status_message)
+                if telegram_success:
+                    logging.info(
+                        "Log file and status message sent successfully to Telegram."
+                    )
+                else:
+                    logging.error(
+                        "Failed to send log file and status message to Telegram."
+                    )
+            else:
+                logging.error(f"Log file not found: {log_file_path}")
+
+        if auto_run:
+            wait_time, next_run_time = get_seconds_until_next_run(run_time)
+            logging.info(f"Waiting until next execution at {next_run_time}...")
             time.sleep(wait_time)
         else:
             break
