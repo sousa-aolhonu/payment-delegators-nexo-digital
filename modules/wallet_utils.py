@@ -1,5 +1,4 @@
 import time
-import logging
 from colorama import Fore, Style
 
 
@@ -17,7 +16,6 @@ def check_balance(wallet):
         )
         return nexo_balance
     except Exception as e:
-        logging.error(f"Error checking NEXO balance: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error checking NEXO balance: {e}")
         return 0.0
 
@@ -42,7 +40,6 @@ def wait_for_transaction(
             )
             return current_balance
         attempts += 1
-    logging.error(f"Transaction not reflected after {max_attempts} attempts.")
     print(
         f"{Fore.RED}[Error]{Style.RESET_ALL} Transaction not reflected after {max_attempts} attempts."
     )
@@ -77,7 +74,6 @@ def wait_for_transaction_id(
             )
             return txid
         attempts += 1
-    logging.error(f"Transaction ID not found after {max_attempts} attempts.")
     print(
         f"{Fore.RED}[Error]{Style.RESET_ALL} Transaction ID not found after {max_attempts} attempts."
     )

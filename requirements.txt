@@ -7,3 +7,5 @@ hiveengine
 pycryptodome
 colorama
 tabulate
+openpyxl
+schedule

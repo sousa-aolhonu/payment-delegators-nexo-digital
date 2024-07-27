@@ -1,4 +1,3 @@
-import logging
 from beem import Hive
 from beem.account import Account
 from colorama import Fore, Style, init
@@ -22,7 +21,6 @@ def get_account_info(account_name):
         )
         return own_hp
     except Exception as e:
-        logging.error(f"Error getting account info for {account_name}: {e}")
         print(
             f"{Fore.RED}[Error]{Style.RESET_ALL} Error getting account info for {Fore.BLUE}{account_name}{Style.RESET_ALL}: {e}"
         )
@@ -41,7 +39,6 @@ def vests_to_hp(vesting_shares, delegator):
         )
         return hp
     except Exception as e:
-        logging.error(f"Error converting vests to HP for {delegator}: {e}")
         print(
             f"{Fore.RED}[Error]{Style.RESET_ALL} Error converting vests to HP for {Fore.BLUE}{delegator}{Style.RESET_ALL}: {e}"
         )

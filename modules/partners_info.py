@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 import os
-import logging
 from colorama import Fore, Style, init
 
 init(autoreset=True)
@@ -21,7 +20,6 @@ def get_partner_accounts():
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} No partner accounts set.")
         return []
     except Exception as e:
-        logging.error(f"Error getting partner accounts: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error getting partner accounts: {e}")
         return []
 
@@ -39,7 +37,6 @@ def get_ignore_payment_accounts():
         print(f"{Fore.CYAN}[Info]{Style.RESET_ALL} No ignore payment accounts set.")
         return []
     except Exception as e:
-        logging.error(f"Error getting ignore payment accounts: {e}")
         print(
             f"{Fore.RED}[Error]{Style.RESET_ALL} Error getting ignore payment accounts: {e}"
         )

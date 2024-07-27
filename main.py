@@ -15,9 +15,43 @@ from modules.calculations import calculate_additional_columns
 from modules.logger import setup_logging
 from modules.telegram_utils import send_telegram_file
 from modules.discord_utils import send_discord_file
-from modules.config import check_env_variables
 
 init(autoreset=True)
+
+
+def check_env_variables():
+    required_vars = [
+        "RECEIVER_ACCOUNT",
+        "PAYMENT_ACCOUNT",
+        "HIVE_ENGINE_ACTIVE_PRIVATE_KEY",
+        "HIVE_ENGINE_POSTING_PRIVATE_KEY",
+        "TOKEN_NAME",
+        "TOKEN_FIXED_PRICE",
+        "HIVE_DEDUCTION_MULTIPLIER",
+        "ACTIVATE_PAYMENTS",
+        "TELEGRAM_BOT_TOKEN",
+        "TELEGRAM_CHAT_ID",
+        "DISCORD_BOT_TOKEN",
+        "DISCORD_CHANNEL_ID",
+    ]
+    missing_vars = []
+    for var in required_vars:
+        if not os.getenv(var):
+            missing_vars.append(var)
+            logging.error(f"Environment variable {var} is not set")
+            print(
+                f"{Fore.RED}[Error]{Style.RESET_ALL} Environment variable {Fore.BLUE}{var}{Style.RESET_ALL} is not set"
+            )
+
+    if missing_vars:
+        raise EnvironmentError(
+            f"Environment variables not set: {', '.join(missing_vars)}"
+        )
+
+    logging.info(f"All required environment variables are set.")
+    print(
+        f"{Fore.GREEN}[Success]{Style.RESET_ALL} All required environment variables are set."
+    )
 
 
 def get_own_hp(receiver_account):
@@ -146,36 +180,15 @@ def main():
         logging.info("Additional columns calculated successfully.")
 
         logging.info("DataFrame before rewards:")
-        df_display = df.copy()
-        df_display["Delegated HP"] = df_display.apply(
-            lambda x: (
-                f"{x['Delegated HP']} HP"
-                if x["Account"] != "APR"
-                else x["Delegated HP"]
-            ),
-            axis=1,
-        )
-        df_display["HIVE Deduction"] = df_display["HIVE Deduction"].apply(
-            lambda x: f"{x} HIVE" if x != "" else x
-        )
-        token_name = os.getenv("TOKEN_NAME", "NEXO")
-        df_display[f"{token_name} Payment"] = df_display[f"{token_name} Payment"].apply(
-            lambda x: f"{x} {token_name}" if x != "" else x
-        )
-        df_display["Percentage"] = df_display["Percentage"].apply(
-            lambda x: (
-                f"{x}%" if pd.notnull(x) and x != "" and not str(x).endswith("%") else x
-            )
-        )
-        print(tabulate(df_display, headers="keys", tablefmt="psql"))
-        logging.debug(f"\n{tabulate(df_display, headers='keys', tablefmt='psql')}")
+        print(tabulate(df, headers="keys", tablefmt="psql"))
+        logging.debug(f"\n{tabulate(df, headers='keys', tablefmt='psql')}")
 
         logging.info("Processing rewards...")
         payments_enabled = os.getenv("ACTIVATE_PAYMENTS", "False") == "True"
         if payments_enabled:
             process_payments(df)
         else:
-            print(tabulate(df_display, headers="keys", tablefmt="psql"))
+            print(tabulate(df, headers="keys", tablefmt="psql"))
             logging.info(
                 "Payments are deactivated. Only spreadsheets will be generated."
             )

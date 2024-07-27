@@ -1,5 +1,4 @@
 import requests
-import logging
 from colorama import Fore, Style
 
 
@@ -32,6 +31,5 @@ def get_transaction_id(payment_account, delegator, payment_amount, token_name):
         )
         return None
     except Exception as e:
-        logging.error(f"Error fetching transaction ID: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error fetching transaction ID: {e}")
         return None

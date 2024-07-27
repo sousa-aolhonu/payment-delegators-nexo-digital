@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-import logging
 from colorama import Fore, Style, init
 
 init(autoreset=True)
@@ -22,7 +21,6 @@ def get_latest_file(directory, prefix):
         )
         return latest_file
     except Exception as e:
-        logging.error(f"Error getting latest file: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error getting latest file: {e}")
         return None
 
@@ -37,12 +35,10 @@ def get_previous_own_hp(latest_file, receiver_account):
             previous_own_hp = df.loc[
                 df["Account"] == receiver_account, "Delegated HP"
             ].values[0]
-            previous_own_hp = float(str(previous_own_hp).replace(" HP", ""))
             print(
                 f"{Fore.GREEN}[Success]{Style.RESET_ALL} Previous own HP retrieved: {Fore.YELLOW}{previous_own_hp}{Style.RESET_ALL}"
             )
             return previous_own_hp
     except Exception as e:
-        logging.error(f"Error getting previous own HP: {e}")
         print(f"{Fore.RED}[Error]{Style.RESET_ALL} Error getting previous own HP: {e}")
     return 0
